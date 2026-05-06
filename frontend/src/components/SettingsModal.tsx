@@ -31,10 +31,6 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
   ];
 
   useEffect(() => {
-    setSelectedTTL(currentSettings.ttl);
-  }, [currentSettings.ttl]);
-
-  useEffect(() => {
     if (isOpen) {
       getCliToken().then(setCliToken);
       setCustomServerInput(getBaseUrl());

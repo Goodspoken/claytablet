@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import type React from 'react';
 import { Mic, Square, Palette, SendHorizontal, ClipboardPaste } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 
@@ -116,7 +117,7 @@ export function BottomInputBar({
               onKeyDown={e => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  if (newNote.trim()) onNoteSubmit(e as any);
+                  if (newNote.trim()) onNoteSubmit(e as React.KeyboardEvent<HTMLTextAreaElement>);
                 }
               }}
               disabled={isRecording}

@@ -10,14 +10,14 @@ interface FileCardProps {
   onDelete?: (id: string) => void;
 }
 
-function getFileIcon(filename?: string) {
+function FileIcon({ filename, size = 24 }: { filename?: string; size?: number }) {
   const ext = (filename || '').split('.').pop()?.toLowerCase() || '';
-  if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'].includes(ext)) return FileText;
-  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(ext)) return FileArchive;
-  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return FileImage;
-  if (['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv'].includes(ext)) return FileVideo;
-  if (['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'webm'].includes(ext)) return FileAudio;
-  return File;
+  if (['pdf', 'doc', 'docx', 'txt', 'rtf', 'odt'].includes(ext)) return <FileText size={size} />;
+  if (['zip', 'rar', '7z', 'tar', 'gz', 'bz2'].includes(ext)) return <FileArchive size={size} />;
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'].includes(ext)) return <FileImage size={size} />;
+  if (['mp4', 'avi', 'mkv', 'mov', 'wmv', 'flv'].includes(ext)) return <FileVideo size={size} />;
+  if (['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'webm'].includes(ext)) return <FileAudio size={size} />;
+  return <File size={size} />;
 }
 
 function formatFileSize(bytes?: number): string {
@@ -38,7 +38,6 @@ function getFileColor(filename?: string): string {
 
 export const FileCard = memo(function FileCard({ item, onShare, onDelete }: FileCardProps) {
   const { lang, t } = useLanguage();
-  const IconComponent = getFileIcon(item.filename);
   const colorClass = getFileColor(item.filename);
   const ext = (item.filename || '').split('.').pop()?.toUpperCase() || 'FILE';
 
@@ -46,7 +45,7 @@ export const FileCard = memo(function FileCard({ item, onShare, onDelete }: File
     <div className="break-inside-avoid bg-white dark:bg-slate-800 shadow-sm border border-slate-200/70 dark:border-slate-700/70 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 rounded-[1.25rem] overflow-hidden group relative">
       <div className="p-5 flex items-center gap-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${colorClass}`}>
-          <IconComponent size={24} />
+          <FileIcon filename={item.filename} size={24} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate" title={item.filename}>
