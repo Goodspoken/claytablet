@@ -1,0 +1,44 @@
+# Локальный деплой без SSL — для разработки и тестирования полного стека
+# Запуск: docker compose -f docker-compose.dev.yml up -d --build
+# Сайт: http://localhost:8080
+# API:   http://localhost:8080/api/
+# Бэкенд напрямую: http://localhost:8555
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: claytablet-backend-dev
+    restart: unless-stopped
+    ports:
+      - "8555:8000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env.dev
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: claytablet-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "8505:8080"
+    depends_on:
+      - backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./frontend/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+      - ./data:/srv/media:ro  # Caddy serves media files directly
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/", "||", "exit", "1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

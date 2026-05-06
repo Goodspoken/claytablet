@@ -1,0 +1,32 @@
+claytablet.ru {
+    redir https://claytablet.online{uri}
+}
+
+claytablet.online {
+    encode zstd gzip
+
+    # Раздача медиафайлов напрямую с диска (быстрее, чем через Python)
+    handle /api/files/* {
+        uri strip_prefix /api/files
+        root * /srv/media/media
+        file_server
+    }
+
+    # Проксирование API и WebSocket на бэкенд FastAPI
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    # Раздача статики React для всех остальных запросов
+    handle {
+        root * /usr/share/caddy
+        try_files {path} /index.html
+        file_server {
+            precompressed gzip
+        }
+    }
+}
+
+gskinfo.ru {
+    reverse_proxy host.docker.internal:18503
+}

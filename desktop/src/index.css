@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* Dark mode via class */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Custom scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(203 213 225) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(203 213 225);
+  border-radius: 999px;
+}
+.dark *::-webkit-scrollbar-thumb {
+  background: rgb(71 85 105);
+}
+
+/* Prevent text selection on drag regions */
+[data-tauri-drag-region] {
+  user-select: none;
+}
+
+/* Smooth transitions */
+body {
+  transition: background-color 0.2s, color 0.2s;
+  overflow: hidden;
+}

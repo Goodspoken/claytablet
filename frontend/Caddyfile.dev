@@ -1,0 +1,20 @@
+:8080 {
+    encode gzip
+
+    # Раздача медиафайлов напрямую с диска
+    handle /api/files/* {
+        uri strip_prefix /api/files
+        root * /srv/media/media
+        file_server
+    }
+
+    handle /api/* {
+        reverse_proxy backend:8000
+    }
+
+    handle {
+        root * /usr/share/caddy
+        try_files {path} /index.html
+        file_server
+    }
+}
