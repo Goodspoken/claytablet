@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { check } from '@tauri-apps/plugin-updater';
+import { relaunch } from '@tauri-apps/plugin-process';
 import { getSetting, setSetting } from '../services/store';
 import { getBaseUrl, setBaseUrl } from '../services/api';
 import type { Language } from '../i18n';
@@ -10,6 +12,9 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const [room, setRoomState] = useState('default');
   const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
   const [saved, setSaved] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'downloading' | 'ready' | 'latest' | 'error'>('idle');
+  const [updateVersion, setUpdateVersion] = useState<string | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   useEffect(() => {
     Promise.all([
@@ -22,6 +27,37 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
       setThemeState(currentTheme);
     });
   }, []);
+
+  const handleCheckUpdate = async () => {
+    setUpdateStatus('checking');
+    setUpdateVersion(null);
+    setDownloadProgress(0);
+    try {
+      const update = await check();
+      if (!update) {
+        setUpdateStatus('latest');
+        return;
+      }
+      setUpdateVersion(update.version);
+      setUpdateStatus('downloading');
+      let downloaded = 0;
+      let total = 0;
+      await update.downloadAndInstall(event => {
+        if (event.event === 'Started') {
+          total = event.data.contentLength ?? 0;
+        } else if (event.event === 'Progress') {
+          downloaded += event.data.chunkLength;
+          setDownloadProgress(total > 0 ? Math.round((downloaded / total) * 100) : 0);
+        } else if (event.event === 'Finished') {
+          setUpdateStatus('ready');
+        }
+      });
+    } catch {
+      setUpdateStatus('error');
+    }
+  };
+
+  const handleRelaunch = () => relaunch();
 
   const handleSave = async () => {
     await setBaseUrl(serverUrl.trim() || 'https://claytablet.online');
@@ -145,6 +181,47 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
               TODO
             </button>
           </div>
+        </div>
+
+        {/* Updates */}
+        <div className="rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Обновления</p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {updateStatus === 'idle' && 'Нажмите чтобы проверить'}
+                {updateStatus === 'checking' && 'Проверяю...'}
+                {updateStatus === 'latest' && '✓ Установлена последняя версия'}
+                {updateStatus === 'downloading' && `Загрузка${updateVersion ? ` v${updateVersion}` : ''}... ${downloadProgress}%`}
+                {updateStatus === 'ready' && `v${updateVersion} готова — перезапустите приложение`}
+                {updateStatus === 'error' && 'Ошибка проверки. Попробуйте позже'}
+              </p>
+            </div>
+            {updateStatus === 'ready' ? (
+              <button
+                onClick={handleRelaunch}
+                className="px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors"
+              >
+                Перезапустить
+              </button>
+            ) : (
+              <button
+                onClick={handleCheckUpdate}
+                disabled={updateStatus === 'checking' || updateStatus === 'downloading'}
+                className="px-3 py-1.5 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white text-xs font-semibold transition-colors"
+              >
+                {updateStatus === 'checking' ? '...' : updateStatus === 'downloading' ? `${downloadProgress}%` : 'Проверить'}
+              </button>
+            )}
+          </div>
+          {updateStatus === 'downloading' && (
+            <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-1.5">
+              <div
+                className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${downloadProgress}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Save button */}

@@ -26,6 +26,17 @@
       "csp": null
     }
   },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk3MDA4NjI5OTVEMjRGNkQKUldSdFQ5S1ZLWVlBbDQyd1JkL3g0UTJIekZwUWZ3K0pFVlU1b1ZvT1RjNE9yb0x0MlgzdVE3alAK",
+      "endpoints": [
+        "https://github.com/Goodspoken/claytablet/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installerArgs": ["/S"]
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",
