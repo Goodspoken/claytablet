@@ -30,6 +30,7 @@ export default function HomePage() {
   // Load user's rooms when user becomes available
   useEffect(() => {
     if (!user) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRoomsLoading(true);
     api.getMyRooms()
       .then((rooms: { id: string; ttl: string; last_activity?: string }[]) => {

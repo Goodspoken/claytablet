@@ -31,11 +31,12 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
   ];
 
   useEffect(() => {
-    if (isOpen) {
-      getCliToken().then(setCliToken);
-      setCustomServerInput(getBaseUrl());
-      setUsingCustomServer(isUsingCustomServer());
-    }
+    if (!isOpen) return;
+    getCliToken().then(setCliToken);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCustomServerInput(getBaseUrl());
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUsingCustomServer(isUsingCustomServer());
   }, [isOpen]);
 
   useEffect(() => {

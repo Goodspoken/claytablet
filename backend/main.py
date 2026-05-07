@@ -213,7 +213,7 @@ def print_lan_qr():
         qr = qrcode.QRCode(version=1, box_size=10, border=2)
         qr.add_data(url)
         qr.make(fit=True)
-        print(f"\n\033[1;32m=== Scan to connect to ClayTablet ===\033[0m")
+        print("\n\033[1;32m=== Scan to connect to ClayTablet ===\033[0m")
         print(f"URL: \033[1;36m{url}\033[0m\n")
         qr.print_ascii(invert=True)
         print("\n")
@@ -284,7 +284,7 @@ async def broadcast_sync(room_id: str):
         rooms.pop(room_id, None)
 
 # --- Auth Dependency ---
-from auth import router as auth_router, get_current_user_id_sync
+from auth import router as auth_router, get_current_user_id_sync  # noqa: E402
 
 app.include_router(auth_router)
 

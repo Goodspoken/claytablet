@@ -9,7 +9,7 @@ import pytest
 # DATA_DIR is set by conftest.py before this file is imported
 TEST_DATA_DIR = os.environ["DATA_DIR"]
 
-import sys
+import sys  # noqa: E402
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 # Now import - database.py will use our TEST_DATA_DIR (set by conftest.py)
@@ -302,7 +302,7 @@ class TestPersonalRooms:
             db.close()
 
     def test_personal_room_requires_auth(self, client):
-        token = self._create_user_and_token(client)
+        self._create_user_and_token(client)
         self._set_room_owner(self.ROOM, self.USER_ID)
 
         # Без авторизации → 403 (не 401!)

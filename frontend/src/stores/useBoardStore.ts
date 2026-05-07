@@ -6,7 +6,7 @@ import * as api from '../api';
 
 // ---- Types ----
 type ToastFn = (message: string, type?: 'success' | 'error' | 'info') => void;
-type TranslateFn = (key: any) => string;
+type TranslateFn = (key: string) => string;
 
 interface BoardState {
   // Room data
