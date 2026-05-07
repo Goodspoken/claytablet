@@ -7,7 +7,7 @@ export interface ClipboardItem {
   filename?: string;
   url?: string;
   size?: number;
-  timestamp: number;
+  created_at: string;
 }
 
 export interface RoomSettings {

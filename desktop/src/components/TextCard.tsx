@@ -63,7 +63,7 @@ export const TextCard = memo(function TextCard({ item, copiedId, onCopy, onShare
       </div>
 
       <div className="px-5 pb-3 pt-1 text-[11px] text-slate-400 dark:text-slate-500 font-medium select-none">
-        {timeAgo(item.timestamp)}
+        {timeAgo(new Date(item.created_at).getTime())}
       </div>
 
       {/* Action bar */}

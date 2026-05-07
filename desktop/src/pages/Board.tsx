@@ -29,9 +29,16 @@ export default function Board() {
   const [showRoomInput, setShowRoomInput] = useState(false);
   const [lastItemCount, setLastItemCount] = useState(0);
 
-  // Load base URL for media cards
+  // Load base URL for media cards + apply saved theme on startup
   useEffect(() => {
     getBaseUrl().then(setBaseUrl);
+    import('../services/store').then(({ getSetting }) => {
+      getSetting<'light' | 'dark' | 'system'>('theme', 'system').then(theme => {
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const dark = theme === 'dark' || (theme === 'system' && prefersDark);
+        document.documentElement.classList.toggle('dark', dark);
+      });
+    });
   }, []);
 
   // Track item count for notifications

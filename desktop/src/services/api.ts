@@ -68,7 +68,9 @@ export async function fetchClipboard(roomId: string): Promise<{
   const images: ClipboardItem[] = (data.images || []).map(i => ({ ...i, type: 'image' as const }));
   const audios: ClipboardItem[] = (data.audios || []).map(a => ({ ...a, type: 'audio' as const }));
   const files: ClipboardItem[] = (data.files || []).map(f => ({ ...f, type: 'file' as const }));
-  const items = [...texts, ...images, ...audios, ...files].sort((a, b) => b.timestamp - a.timestamp);
+  const items = [...texts, ...images, ...audios, ...files].sort(
+    (a, b) => new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime()
+  );
 
   return {
     items,
