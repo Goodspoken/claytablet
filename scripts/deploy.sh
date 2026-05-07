@@ -32,7 +32,11 @@ rsync -av --exclude='.git' --exclude='node_modules' --exclude='frontend/dist' \
   "$REPO_DIR/" "$APP_DIR/"
 
 cd "$APP_DIR"
-mkdir -p data/images
+mkdir -p data/images data/media
+
+# Fix permissions so the container can write to the DB and media
+chmod 666 data/claytablet.db 2>/dev/null || true
+chmod 777 data/media data/images 2>/dev/null || true
 
 # --- Restart ---
 echo "🔄 Restarting services..."
