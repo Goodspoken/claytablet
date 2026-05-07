@@ -71,6 +71,13 @@
 
 ---
 
+- [x] **Трек: Десктоп-приложение (Tauri v2)**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
+  *Ссылка: [./tracks/desktop_app.md](./tracks/desktop_app.md)*
+  *Описание: Нативный клиент под Windows / Linux / macOS на Tauri v2. Системный трей, Quick Paste (Ctrl+Shift+V), отправка буфера (Ctrl+Shift+C), тёмная тема, RU/EN. Auto-updater с прогресс-баром. GitHub CI/CD — матричная сборка и автопубликация релизов. Текущая версия: v0.2.0.*
+
+---
+
 ## 🔥 Future Roadmap (Масштабное видение)
 
 - [x] **Трек: Полное переименование проекта (PopyCast -> ClayTablet)**

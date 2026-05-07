@@ -1,8 +1,20 @@
 # 📋 PASSPORT — ClayTablet Project
 
-> **Версия:** 2.3.0
-> **Дата обновления:** 2026-04-26
-> **Статус:** 🟡 Деплой выполнен, ожидание DNS пропагации для HTTPS
+> **Версия:** 0.2.0
+> **Дата обновления:** 2026-05-07
+> **Статус:** 🟢 Продакшен работает на claytablet.online. Десктоп v0.2.0 билдится в CI.
+
+---
+
+## Версионирование
+
+Схема: `0.MAJOR.PATCH`
+
+| Позиция | Смысл | Пример |
+|---|---|---|
+| **Первая (`0`)** | Бета-статус. Станет `1` при выходе из беты | `0.x.x` → `1.x.x` |
+| **Вторая (`MAJOR`)** | Крупный апдейт: новый функционал, движок, архитектура | `0.2.0` → `0.3.0` |
+| **Третья (`PATCH`)** | Мелкие правки: UI-фиксы, опечатки, шрифты | `0.2.0` → `0.2.1` |
 
 ---
 
@@ -20,9 +32,13 @@
 |---|---|
 | **Frontend** | React 19, Vite, Tailwind CSS v4 |
 | **Backend** | Python 3.11, FastAPI, Uvicorn, WebSocket |
-| **Proxy** | Caddy (автоматический HTTPS от Let's Encrypt через DuckDNS) |
+| **Desktop** | Tauri v2 (Rust + WebView), Windows / Linux / macOS |
+| **Mobile** | React Native + Expo SDK 52 (в разработке) |
+| **CLI** | Go-бинарник `claytab` |
+| **Proxy** | Caddy (автоматический HTTPS, Let's Encrypt) |
 | **Container** | Docker + Docker Compose |
-| **Storage** | In-memory + файловая система (media volume) |
+| **Storage** | SQLite (SQLAlchemy + Alembic) + файловая система (media volume) |
+| **CI/CD** | GitHub Actions (backend + frontend + desktop matrix build) |
 
 ### Порты (Docker Production)
 
@@ -201,7 +217,18 @@ curl http://109.120.134.188:8555/api/health
 
 ## Changelog
 
-### v2.4.0 (2026-04-29)
+### v0.2.0 (2026-05-07)
+- ✅ **Десктоп-приложение (Tauri v2)**: нативный клиент под Windows / Linux / macOS (Apple Silicon). Системный трей, Quick Paste (`Ctrl+Shift+V`), отправка буфера (`Ctrl+Shift+C`), тёмная тема, RU/EN.
+- ✅ **Auto-updater**: встроенная проверка и установка обновлений прямо из Settings, прогресс-бар загрузки, кнопка «Перезапустить».
+- ✅ **GitHub CI/CD**: матричная сборка (Windows / Ubuntu / macOS) через `tauri-apps/tauri-action`, подпись релизов (minisign), автопубликация на GitHub Releases.
+- ✅ **GitHub репозиторий**: проект открыт на https://github.com/Goodspoken/claytablet, CI (backend + frontend + desktop), CONTRIBUTING.md.
+- ✅ **Фикс Offline**: capabilities.json теперь включает все разрешения плагинов — исправлен главный баг десктопа.
+
+### v0.1.x → Старая внутренняя нумерация (2026-04-15 — 2026-05-06)
+> Версии 1.x.x — 2.4.x были внутренними итерациями до введения публичной схемы версионирования.
+> Детальный changelog сохранён ниже под оригинальными тегами.
+
+### [legacy] v2.4.0 (2026-04-29)
 - ✅ **Read-Only доски**: владелец включает режим через настройки, гостям скрыт input-бар и кнопки удаления. Бэкенд: `is_readonly` + `is_owner` в API, `verify_write_access` dependency.
 - ✅ **install.sh**: `curl | bash` — авто-генерация JWT, определение LAN IP, опциональный QR-код.
 - ✅ **README.md**: переписан — фичи, CLI шпаргалка, tech stack таблица.
