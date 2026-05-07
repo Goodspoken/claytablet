@@ -6,7 +6,8 @@ import * as api from '../api';
 
 // ---- Types ----
 type ToastFn = (message: string, type?: 'success' | 'error' | 'info') => void;
-type TranslateFn = (key: string) => string;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TranslateFn = (key: any) => string;
 
 interface BoardState {
   // Room data

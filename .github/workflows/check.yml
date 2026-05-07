@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r backend/requirements.txt ruff
+          pip install -r backend/requirements.txt ruff pytest httpx
 
       - name: Lint (ruff)
         run: ruff check backend/
