@@ -40,6 +40,20 @@ yandex_sso = YandexSSO(
     allow_insecure_http=_allow_insecure
 )
 
+google_sso_mobile = GoogleSSO(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    f"{HOST_URL}/api/auth/google/callback/mobile",
+    allow_insecure_http=_allow_insecure
+)
+
+yandex_sso_mobile = YandexSSO(
+    YANDEX_CLIENT_ID,
+    YANDEX_CLIENT_SECRET,
+    f"{HOST_URL}/api/auth/yandex/callback/mobile",
+    allow_insecure_http=_allow_insecure
+)
+
 def create_jwt_token(user_id: str) -> str:
     payload = {
         "sub": user_id,
@@ -95,6 +109,53 @@ async def yandex_callback(request: Request, db: Session = Depends(database.get_d
     with yandex_sso:
         user_info = await yandex_sso.verify_and_process(request)
     return handle_sso_login(user_info, "yandex", db)
+
+@router.get("/google/login/mobile")
+async def google_login_mobile():
+    with google_sso_mobile:
+        return await google_sso_mobile.get_login_redirect()
+
+@router.get("/google/callback/mobile")
+async def google_callback_mobile(request: Request, db: Session = Depends(database.get_db)):
+    with google_sso_mobile:
+        user_info = await google_sso_mobile.verify_and_process(request)
+    return handle_sso_login_mobile(user_info, "google", db)
+
+@router.get("/yandex/login/mobile")
+async def yandex_login_mobile():
+    with yandex_sso_mobile:
+        return await yandex_sso_mobile.get_login_redirect()
+
+@router.get("/yandex/callback/mobile")
+async def yandex_callback_mobile(request: Request, db: Session = Depends(database.get_db)):
+    with yandex_sso_mobile:
+        user_info = await yandex_sso_mobile.verify_and_process(request)
+    return handle_sso_login_mobile(user_info, "yandex", db)
+
+def handle_sso_login_mobile(user_info, provider: str, db: Session):
+    if not user_info:
+        return RedirectResponse(url="claytablet://auth?error=failed")
+
+    user_id = f"{provider}_{user_info.id}"
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        user = models.User(
+            id=user_id,
+            email=user_info.email,
+            name=user_info.display_name,
+            picture=user_info.picture,
+            provider=provider
+        )
+        db.add(user)
+    else:
+        user.name = user_info.display_name
+        user.picture = user_info.picture
+
+    db.commit()
+
+    token = create_jwt_token(user_id)
+    return RedirectResponse(url=f"claytablet://auth?token={token}&provider={provider}")
 
 def handle_sso_login(user_info, provider: str, db: Session):
     if not user_info:
