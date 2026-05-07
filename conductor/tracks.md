@@ -85,27 +85,26 @@
   *Ссылка: [./tracks/rename_to_claytablet.md](./tracks/rename_to_claytablet.md)*
   *Описание: Безопасное переименование корневых папок, docker volumes, бэкенд роутов и файлов баз данных для устранения путаницы в названиях.*
 
-- [ ] **Трек: Настольное приложение (Desktop App)**
-  *Приоритет: 🟡 Долгосрочно*
+- [x] **Трек: Настольное приложение (Desktop App)**
+  *Приоритет: 🟡 Долгосрочно* *(завершён ✅ 2026-05-07)*
   *Ссылка: [./tracks/desktop_app.md](./tracks/desktop_app.md)*
-  *Описание: Tauri-оболочка (Windows/Linux/macOS). Глобальные шорткаты (`Ctrl+Shift+V`), трей-виджет.*
+  *Описание: Tauri v2 (Windows/Linux/macOS). Глобальные шорткаты Ctrl+Shift+V/C, системный трей. Реализовано в рамках трека ниже.*
 
-- [ ] **Трек: Desktop App (Tauri) — Gemini CLI Pro**
-  *Приоритет: 🟡 В работе* *(разрабатывает Gemini CLI Pro с 2026-05-06)*
+- [x] **Трек: Desktop App (Tauri) — Gemini CLI Pro**
+  *Приоритет: 🟡 В работе* *(завершён ✅ 2026-05-07)*
   *Ссылка: [./tracks/desktop_app_gemini_20260506.md](./tracks/desktop_app_gemini_20260506.md)*
-  *Описание: Tauri v2 + React 19 + Tailwind v4. System tray, глобальные хоткеи Ctrl+Shift+V/C, Quick Paste окно, уведомления ОС. Windows + Linux. Ревью — Claude Code по запросу.*
-  * **Авто-перехват скриншотов:** перехват нажатия `PrintScreen` (или `Win+Shift+S`), чтобы скриншот моментально сохранялся в нужную доску или синхронизируемую папку.
-  * **Умная AI-категоризация:** нейросеть будет анализировать загружаемые скриншоты и понимать контекст (например, это окно VS Code, терминала или браузера). Это позволит легко фильтровать и находить нужные фрагменты кода или логи среди кучи картинок.
+  *Описание: Tauri v2 + React 19 + Tailwind v4. System tray, глобальные хоткеи Ctrl+Shift+V/C, Quick Paste окно, уведомления ОС, auto-updater. Windows + Linux + macOS. Релиз v0.2.0 опубликован на GitHub.*
 
-- [ ] **Трек: Мобильное приложение (Mobile App)**
-  *Приоритет: 🟡 Долгосрочно*
+- [x] **Трек: Мобильное приложение (Mobile App)**
+  *Приоритет: 🟡 Долгосрочно* *(завершён ✅ 2026-05-07 — см. трек Expo)*
   *Ссылка: [./tracks/mobile_app.md](./tracks/mobile_app.md)*
-  *Описание: Capacitor или React Native. Нативное системное Share-меню ("Поделиться в PopyCast"), Push-уведомления, Telegram Mini App.*
+  *Описание: Реализовано через React Native + Expo SDK 52. Share-меню и Push-уведомления — следующий этап.*
 
-- [ ] **Трек: Мобильное приложение — Expo (Gemini CLI Pro)**
-  *Приоритет: 🟡 В работе* *(разрабатывает Gemini CLI Pro с 2026-05-06)*
+- [x] **Трек: Мобильное приложение — Expo (Gemini CLI Pro)**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
   *Ссылка: [./tracks/mobile_app_gemini_20260506.md](./tracks/mobile_app_gemini_20260506.md)*
-  *Описание: React Native + Expo SDK 52, Expo Router, managed workflow. HomeScreen, BoardScreen (FlatList + WebSocket + BottomBar), SettingsScreen. Ревью — Claude Code по запросу. Промпт и чеклист ревью в файле трека.*
+  *GitHub: https://github.com/Goodspoken/claytablet-mobile*
+  *Описание: React Native + Expo SDK 54, Expo Router v6, managed workflow. HomeScreen (ввод ID, история 8 комнат, QR-сканер), BoardScreen (FlatList + WebSocket + кэш offline), BottomBar (текст/фото/аудио), TextCard/ImageCard/AudioCard, Settings. Ревью выполнено Claude Code — исправлен adaptive-icon, версия 0.2.0, кнопка Save в Settings. Запущено тестирование через `npx expo start`.*
 
 - [ ] **Трек: AI и Agentic интеграция (Умный холст)**
   *Приоритет: 🔵 Визионерский*
