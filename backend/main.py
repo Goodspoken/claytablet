@@ -536,7 +536,7 @@ def list_public_rooms(db: Session = Depends(database.get_db)):
     """List public, non-system rooms ordered by recent activity."""
     rooms = (
         db.query(models.Room)
-        .filter(models.Room.is_public == True, models.Room.is_system == False)
+        .filter(models.Room.is_public, ~models.Room.is_system)
         .order_by(models.Room.last_activity.desc())
         .limit(50)
         .all()

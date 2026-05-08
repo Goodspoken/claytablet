@@ -6,7 +6,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
 import { AuthModal } from '../components/AuthModal';
 import * as api from '../api';
-import { generateId } from '../helpers';
+import { generateId, timeAgo } from '../helpers';
 import type { PublicRoom, SystemRoom } from '../types';
 
 const PENDING_ROOM_KEY = 'claytablet_pending_room';
@@ -33,11 +33,13 @@ export default function HomePage() {
   // Load user's rooms when user becomes available
   useEffect(() => {
     if (!user) return;
-    setRoomsLoading(true);
     api.getMyRooms()
-      .then((rooms: { id: string; ttl: string; last_activity?: string }[]) => setMyRooms(rooms))
-      .catch(() => setMyRooms([]))
-      .finally(() => setRoomsLoading(false));
+      .then((rooms: { id: string; ttl: string; last_activity?: string }[]) => {
+        setMyRooms(rooms);
+        setRoomsLoading(false);
+      })
+      .catch(() => { setMyRooms([]); setRoomsLoading(false); });
+    void Promise.resolve().then(() => setRoomsLoading(true));
   }, [user]);
 
   // Load public + system rooms on mount
@@ -89,13 +91,7 @@ export default function HomePage() {
     setIsAuthModalOpen(true);
   };
 
-  const formatActivity = (ts: number) => {
-    const diff = Date.now() / 1000 - ts;
-    if (diff < 60) return lang === 'RU' ? 'только что' : 'just now';
-    if (diff < 3600) return lang === 'RU' ? `${Math.floor(diff / 60)} мин. назад` : `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return lang === 'RU' ? `${Math.floor(diff / 3600)} ч. назад` : `${Math.floor(diff / 3600)}h ago`;
-    return lang === 'RU' ? `${Math.floor(diff / 86400)} дн. назад` : `${Math.floor(diff / 86400)}d ago`;
-  };
+  const formatActivity = (ts: number) => timeAgo(ts, lang);
 
   const steps = lang === 'RU' ? [
     { icon: Monitor, title: 'Откройте на компьютере', desc: 'Зайдите на claytablet.online' },
