@@ -23,6 +23,8 @@ class Room(Base):
     password_hash = Column(String, nullable=True)
     ttl = Column(String, default="24h")
     is_readonly = Column(Boolean, default=False, nullable=False)
+    is_public = Column(Boolean, default=False, nullable=False)
+    is_system = Column(Boolean, default=False, nullable=False)
     layout_order = Column(JSON, nullable=True)
     last_activity = Column(Float, default=time.time)
 

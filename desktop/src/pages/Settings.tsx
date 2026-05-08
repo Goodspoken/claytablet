@@ -1,31 +1,33 @@
 import { useState, useEffect } from 'react';
 import { check } from '@tauri-apps/plugin-updater';
 import { relaunch } from '@tauri-apps/plugin-process';
+import { getVersion } from '@tauri-apps/api/app';
 import { getSetting, setSetting } from '../services/store';
 import { getBaseUrl, setBaseUrl } from '../services/api';
 import type { Language } from '../i18n';
 import { useI18n } from '../hooks/useI18n';
+import { useTheme } from '../hooks/useTheme';
 
 export default function Settings({ onClose }: { onClose?: () => void }) {
   const { lang, setLang } = useI18n();
+  const { theme, setTheme } = useTheme();
   const [serverUrl, setServerUrlState] = useState('https://claytablet.online');
   const [room, setRoomState] = useState('default');
-  const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
   const [saved, setSaved] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'downloading' | 'ready' | 'latest' | 'error'>('idle');
   const [updateVersion, setUpdateVersion] = useState<string | null>(null);
   const [downloadProgress, setDownloadProgress] = useState(0);
+  const [appVersion, setAppVersion] = useState('');
 
   useEffect(() => {
     Promise.all([
       getBaseUrl(),
       getSetting<string>('currentRoom', 'default'),
-      getSetting<'light' | 'dark' | 'system'>('theme', 'system'),
-    ]).then(([url, currentRoom, currentTheme]) => {
+    ]).then(([url, currentRoom]) => {
       setServerUrlState(url);
       setRoomState(currentRoom);
-      setThemeState(currentTheme);
     });
+    getVersion().then(setAppVersion).catch(() => {});
   }, []);
 
   const handleCheckUpdate = async () => {
@@ -62,16 +64,8 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const handleSave = async () => {
     await setBaseUrl(serverUrl.trim() || 'https://claytablet.online');
     await setSetting('currentRoom', room.trim() || 'default');
-    await setSetting('theme', theme);
-    applyTheme(theme);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-  };
-
-  const applyTheme = (t: 'light' | 'dark' | 'system') => {
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const dark = t === 'dark' || (t === 'system' && prefersDark);
-    document.documentElement.classList.toggle('dark', dark);
   };
 
   return (
@@ -117,7 +111,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
             {(['light', 'dark', 'system'] as const).map(t => (
               <button
                 key={t}
-                onClick={() => setThemeState(t)}
+                onClick={() => setTheme(t)}
                 className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-colors ${
                   theme === t
                     ? 'bg-indigo-500 border-indigo-500 text-white'
@@ -188,6 +182,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Обновления</p>
+              <p className="text-xs text-slate-400 mt-0.5">Текущая версия: {appVersion || '...'}</p>
               <p className="text-xs text-slate-400 mt-0.5">
                 {updateStatus === 'idle' && 'Нажмите чтобы проверить'}
                 {updateStatus === 'checking' && 'Проверяю...'}

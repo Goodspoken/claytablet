@@ -3,9 +3,11 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { fetchClipboard } from '../services/api';
 import { getCurrentRoom } from '../services/store';
+import { useTheme } from '../hooks/useTheme';
 import type { ClipboardItem } from '../types';
 
 export default function QuickPaste() {
+  useTheme();
   const [items, setItems] = useState<ClipboardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const win = getCurrentWindow();

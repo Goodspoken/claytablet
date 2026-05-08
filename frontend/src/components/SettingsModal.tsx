@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, HardDrive, Shield, Clock, Share2, QrCode, Terminal, Copy, Check, EyeOff, Server } from 'lucide-react';
+import { X, HardDrive, Shield, Clock, Share2, QrCode, Terminal, Copy, Check, EyeOff, Server, Globe } from 'lucide-react';
 import type { RoomSettings } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getCliToken, getBaseUrl, setCustomServer, clearCustomServer, isUsingCustomServer } from '../api';
@@ -189,7 +189,7 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
             </div>
           </div>
 
-          {/* Read-Only toggle — доступен всем */}
+          {/* Read-Only toggle */}
           <>
             <div className="h-px w-full bg-slate-100 dark:bg-slate-800"></div>
             <div className="flex items-start gap-4">
@@ -218,6 +218,42 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
               </div>
             </div>
           </>
+
+          {/* Public room toggle */}
+          {!currentSettings.is_system && (
+            <>
+              <div className="h-px w-full bg-slate-100 dark:bg-slate-800"></div>
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-500 dark:text-green-400 rounded-2xl shrink-0">
+                  <Globe size={24} />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-800 dark:text-slate-200">
+                      {lang === 'RU' ? 'Публичная комната' : 'Public Room'}
+                    </h3>
+                    <button
+                      onClick={() => onUpdateSettings({ ...currentSettings, is_public: !currentSettings.is_public })}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                        currentSettings.is_public
+                          ? 'bg-green-500 dark:bg-green-500'
+                          : 'bg-slate-200 dark:bg-slate-700'
+                      }`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                        currentSettings.is_public ? 'translate-x-6' : 'translate-x-1'
+                      }`} />
+                    </button>
+                  </div>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                    {lang === 'RU'
+                      ? 'Комната будет видна в разделе «Открытые доски» на главной странице'
+                      : 'Room will appear in the «Open Boards» section on the home page'}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Server selector */}
           <div className="h-px w-full bg-slate-100 dark:bg-slate-800"></div>

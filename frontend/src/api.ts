@@ -150,6 +150,16 @@ export async function getMyRooms() {
   return res.data;
 }
 
+export async function getPublicRooms() {
+  const res = await axios.get(`${getBaseUrl()}/api/claytablet/rooms/public`);
+  return res.data;
+}
+
+export async function getSystemRooms() {
+  const res = await axios.get(`${getBaseUrl()}/api/claytablet/rooms/system`);
+  return res.data;
+}
+
 export async function logout() {
   await axios.post(`${getBaseUrl()}/api/auth/logout`);
 }

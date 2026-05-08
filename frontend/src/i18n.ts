@@ -76,6 +76,9 @@ export const translations = {
     showQR: 'Показать QR-код',
     copyLink: 'Скопировать ссылку',
     
+    goToRoom: 'Перейти',
+    goToRoomPlaceholder: 'Введите ID комнаты...',
+
     passwordTitle: 'Вход в комнату',
     passwordEnterLabel: 'Введите пароль для доступа:',
     enterRoom: 'Войти',
@@ -203,6 +206,9 @@ export const translations = {
     showQR: 'Show QR code',
     copyLink: 'Copy link',
     
+    goToRoom: 'Go',
+    goToRoomPlaceholder: 'Enter room ID...',
+
     passwordTitle: 'Room Entry',
     passwordEnterLabel: 'Enter password to access:',
     enterRoom: 'Enter',

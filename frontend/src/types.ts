@@ -22,7 +22,24 @@ export interface RoomSettings {
   password?: string;
   is_protected?: boolean;
   is_readonly?: boolean;
+  is_public?: boolean;
+  is_system?: boolean;
   is_owner?: boolean;
+}
+
+export interface PublicRoom {
+  id: string;
+  is_protected: boolean;
+  last_activity: number;
+}
+
+export interface SystemRoom {
+  id: string;
+  emoji: string;
+  title_ru: string;
+  title_en: string;
+  description_ru: string;
+  description_en: string;
 }
 
 export type ToastType = 'success' | 'error' | 'info';

@@ -112,6 +112,7 @@ class RoomSettings(BaseModel):
     ttl: str = Field("24h", pattern=r"^(10m|1h|24h|7d|forever)$")
     password: Optional[str] = Field(None, max_length=100)
     is_readonly: bool = False
+    is_public: bool = False
 
 class OrderSettings(BaseModel):
     order: list[str]
@@ -120,12 +121,12 @@ class PasswordVerification(BaseModel):
     password: str
 
 # --- DB Helpers ---
-def touch_room(db: Session, room_id: str, owner_id: str = None):
+def touch_room(db: Session, room_id: str, owner_id: str = None, is_public: bool = False):
     """Update last activity timestamp for a room. Creates it if it doesn't exist."""
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
     if not room:
         ttl = "forever" if owner_id else "24h"
-        room = models.Room(id=room_id, last_activity=time.time(), owner_id=owner_id, ttl=ttl)
+        room = models.Room(id=room_id, last_activity=time.time(), owner_id=owner_id, ttl=ttl, is_public=is_public)
         db.add(room)
     else:
         room.last_activity = time.time()
@@ -158,6 +159,8 @@ async def cleanup_stale_rooms():
             stale_room_ids = []
             
             for room in all_rooms:
+                if room.is_system:  # system rooms are permanent
+                    continue
                 ttl = get_room_ttl(db, room.id)
                 if ttl == 0:  # "forever"
                     continue
@@ -220,9 +223,97 @@ def print_lan_qr():
     except ImportError:
         pass
 
+# --- System rooms seed ---
+SYSTEM_ROOMS = [
+    {
+        "id": "_help",
+        "emoji": "❓",
+        "title_ru": "Помощь",
+        "title_en": "Help",
+        "description_ru": "FAQ и инструкции по использованию ClayTablet",
+        "description_en": "FAQ and how-to guides for ClayTablet",
+    },
+    {
+        "id": "_about",
+        "emoji": "📖",
+        "title_ru": "О проекте",
+        "title_en": "About",
+        "description_ru": "Что такое ClayTablet, идея и принципы",
+        "description_en": "What ClayTablet is — idea and principles",
+    },
+    {
+        "id": "_me",
+        "emoji": "👤",
+        "title_ru": "Об авторе",
+        "title_en": "About the author",
+        "description_ru": "Кто делает ClayTablet",
+        "description_en": "Who is building ClayTablet",
+    },
+    {
+        "id": "_log",
+        "emoji": "📅",
+        "title_ru": "Жизнь проекта",
+        "title_en": "Changelog",
+        "description_ru": "Что нового, планы и история версий",
+        "description_en": "What's new, plans, and version history",
+    },
+    {
+        "id": "_team",
+        "emoji": "🤝",
+        "title_ru": "Команда и благодарности",
+        "title_en": "Team & Credits",
+        "description_ru": "Контрибьюторы, доноры и все, кто помогает",
+        "description_en": "Contributors, donors and everyone who helps",
+    },
+    {
+        "id": "_terms",
+        "emoji": "📜",
+        "title_ru": "Условия использования",
+        "title_en": "Terms of use",
+        "description_ru": "Бесплатно, открытый код. Делитесь улучшениями.",
+        "description_en": "Free and open source. Please share improvements back.",
+    },
+]
+
+def seed_system_rooms(db: Session):
+    """Create system rooms if they don't exist yet."""
+    for room_meta in SYSTEM_ROOMS:
+        room_id = room_meta["id"]
+        existing = db.query(models.Room).filter(models.Room.id == room_id).first()
+        if not existing:
+            room = models.Room(
+                id=room_id,
+                ttl="forever",
+                is_system=True,
+                is_public=True,
+                is_readonly=True,
+                last_activity=time.time(),
+            )
+            db.add(room)
+            # Add a pinned description text item (bilingual)
+            item = models.Item(
+                id=str(uuid.uuid4()),
+                room_id=room_id,
+                item_type="text",
+                content=(
+                    f"{room_meta['emoji']} **{room_meta['title_ru']} / {room_meta['title_en']}**\n\n"
+                    f"🇷🇺 {room_meta['description_ru']}\n"
+                    f"🇬🇧 {room_meta['description_en']}"
+                ),
+                timestamp=time.time(),
+            )
+            db.add(item)
+            logger.info("Seeded system room: %s", room_id)
+    db.commit()
+
 # --- Lifespan ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    db = database.SessionLocal()
+    try:
+        seed_system_rooms(db)
+    finally:
+        db.close()
     task = asyncio.create_task(cleanup_stale_rooms())
     logger.info("ClayTablet API started. SQLite DB attached. Cleanup task running every %ds.", CLEANUP_INTERVAL_SECONDS)
     print_lan_qr()
@@ -353,6 +444,19 @@ def verify_write_access(
         raise HTTPException(status_code=403, detail="readonly")
     return user_id
 
+def verify_chat_access(
+    room_id: str = Path(..., pattern=ROOM_ID_REGEX),
+    db: Session = Depends(database.get_db),
+    user_id: Optional[str] = Depends(verify_room_access)
+):
+    """Like verify_write_access, but also allows chat in public read-only rooms (e.g. system rooms)."""
+    room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    if room and room.is_readonly and user_id != room.owner_id:
+        # Allow chat when the readonly room is publicly visible — comments under system/public boards
+        if not room.is_public:
+            raise HTTPException(status_code=403, detail="readonly")
+    return user_id
+
 # --- Health ---
 @app.api_route("/api/health", methods=["GET", "HEAD"])
 async def health():
@@ -386,6 +490,8 @@ def _room_settings_dict(room, user_id: Optional[str]) -> dict:
         "ttl": room.ttl,
         "is_protected": bool(room.password_hash),
         "is_readonly": bool(room.is_readonly),
+        "is_public": bool(room.is_public),
+        "is_system": bool(room.is_system),
         "is_owner": room.owner_id is not None and user_id == room.owner_id,
     }
 
@@ -410,6 +516,8 @@ async def update_settings(
     room = touch_room(db, room_id, owner_id=user_id)
     room.ttl = settings.ttl
     room.is_readonly = settings.is_readonly
+    if not room.is_system:
+        room.is_public = settings.is_public
 
     if settings.password is not None:
         if settings.password == "":
@@ -422,6 +530,30 @@ async def update_settings(
     logger.info("Room %s settings updated: ttl=%s, has_password=%s, is_readonly=%s", room_id, room.ttl, bool(room.password_hash), room.is_readonly)
     await broadcast_sync(room_id)
     return _room_settings_dict(room, user_id)
+
+@app.get("/api/claytablet/rooms/public")
+def list_public_rooms(db: Session = Depends(database.get_db)):
+    """List public, non-system rooms ordered by recent activity."""
+    rooms = (
+        db.query(models.Room)
+        .filter(models.Room.is_public == True, models.Room.is_system == False)
+        .order_by(models.Room.last_activity.desc())
+        .limit(50)
+        .all()
+    )
+    return [
+        {
+            "id": r.id,
+            "is_protected": bool(r.password_hash),
+            "last_activity": r.last_activity,
+        }
+        for r in rooms
+    ]
+
+@app.get("/api/claytablet/rooms/system")
+def list_system_rooms():
+    """Return the list of built-in system rooms with metadata."""
+    return SYSTEM_ROOMS
 
 @app.post("/api/claytablet/{room_id}/order")
 async def update_order(
@@ -723,7 +855,7 @@ async def add_chat(
     item: ChatItem,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     db: Session = Depends(database.get_db),
-    user_id: Optional[str] = Depends(verify_write_access)
+    user_id: Optional[str] = Depends(verify_chat_access)
 ):
     touch_room(db, room_id, owner_id=user_id)
     

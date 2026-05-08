@@ -1,45 +1,65 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { writeText, readText } from '@tauri-apps/plugin-clipboard-manager';
+import { open as openDialog } from '@tauri-apps/plugin-dialog';
+import { readFile } from '@tauri-apps/plugin-fs';
 import { sendNotification } from '@tauri-apps/plugin-notification';
-import { Settings2, RefreshCw, Plus } from 'lucide-react';
+import { Settings, RefreshCw, ChevronDown, Clock, Plus, Send, Clipboard, Paperclip } from 'lucide-react';
 
 import { useRoom } from '../hooks/useRoom';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { useI18n } from '../hooks/useI18n';
-import { addText, getBaseUrl } from '../services/api';
+import { useTheme } from '../hooks/useTheme';
+import { addText, addImage, addAudio, addFile, deleteItem, getBaseUrl } from '../services/api';
 import { TextCard } from '../components/TextCard';
 import { ImageCard } from '../components/ImageCard';
 import { AudioCard } from '../components/AudioCard';
 import { FileCard } from '../components/FileCard';
-import { BottomBar } from '../components/BottomBar';
 import { ConnectionStatus } from '../components/ConnectionStatus';
-import Settings from './Settings';
+import SettingsPage from './Settings';
 import type { ClipboardItem } from '../types';
+
+function getMimeFromExt(ext: string): string {
+  const img = ['png', 'jpg', 'jpeg', 'gif', 'webp'];
+  const audio = ['mp3', 'ogg', 'wav', 'webm', 'opus', 'm4a'];
+  if (img.includes(ext)) return `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+  if (audio.includes(ext)) return `audio/${ext}`;
+  return 'application/octet-stream';
+}
 
 export default function Board() {
   const { roomId, items, recentRooms, loading, fetchData, changeRoom } = useRoom();
   const { isConnected } = useWebSocket({ roomId, onSync: fetchData });
-  const { lang: _lang } = useI18n();
+  const { t } = useI18n();
+  useTheme(); // ensure theme is applied/synced on this page
   const [baseUrl, setBaseUrl] = useState('https://claytablet.online');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showRoomMenu, setShowRoomMenu] = useState(false);
   const [roomInput, setRoomInput] = useState('');
-  const [showRoomInput, setShowRoomInput] = useState(false);
   const [lastItemCount, setLastItemCount] = useState(0);
+  const [noteText, setNoteText] = useState('');
+  const [sendingNote, setSendingNote] = useState(false);
+  const [attachLoading, setAttachLoading] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  // Load base URL for media cards + apply saved theme on startup
+  // Load base URL
   useEffect(() => {
     getBaseUrl().then(setBaseUrl);
-    import('../services/store').then(({ getSetting }) => {
-      getSetting<'light' | 'dark' | 'system'>('theme', 'system').then(theme => {
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const dark = theme === 'dark' || (theme === 'system' && prefersDark);
-        document.documentElement.classList.toggle('dark', dark);
-      });
-    });
   }, []);
+
+  // Close room menu when clicking outside
+  useEffect(() => {
+    if (!showRoomMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowRoomMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showRoomMenu]);
 
   // Track item count for notifications
   useEffect(() => {
@@ -97,7 +117,6 @@ export default function Board() {
   }, [baseUrl, roomId]);
 
   const handleDelete = useCallback(async (id: string) => {
-    const { deleteItem } = await import('../services/api');
     await deleteItem(roomId, id);
     fetchData();
   }, [roomId, fetchData]);
@@ -107,44 +126,151 @@ export default function Board() {
     if (roomInput.trim()) {
       await changeRoom(roomInput.trim());
       setRoomInput('');
-      setShowRoomInput(false);
+      setShowRoomMenu(false);
+    }
+  };
+
+  const handleSendNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = noteText.trim();
+    if (!trimmed || sendingNote) return;
+    setSendingNote(true);
+    try {
+      await addText(roomId, trimmed);
+      setNoteText('');
+      fetchData();
+    } catch (err) {
+      console.error('addText error:', err);
+    } finally {
+      setSendingNote(false);
+    }
+  };
+
+  const handlePasteClipboard = async () => {
+    try {
+      const txt = await readText();
+      if (txt?.trim()) {
+        await addText(roomId, txt.trim());
+        fetchData();
+      }
+    } catch (err) {
+      console.error('paste error:', err);
+    }
+  };
+
+  const handleAttach = async () => {
+    const selected = await openDialog({
+      multiple: true,
+      filters: [
+        { name: 'Изображения', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp'] },
+        { name: 'Аудио', extensions: ['mp3', 'ogg', 'wav', 'webm', 'opus', 'm4a'] },
+        { name: 'Все файлы', extensions: ['*'] },
+      ],
+    });
+    if (!selected) return;
+    const paths = Array.isArray(selected) ? selected : [selected];
+    setAttachLoading(true);
+    try {
+      for (const path of paths) {
+        const ext = path.split('.').pop()?.toLowerCase() ?? 'bin';
+        const mime = getMimeFromExt(ext);
+        const data = await readFile(path);
+        const blob = new Blob([data], { type: mime });
+        const filename = path.split('/').pop() ?? path.split('\\').pop() ?? 'file';
+        const file = new File([blob], filename, { type: mime });
+        if (mime.startsWith('image/')) await addImage(roomId, file);
+        else if (mime.startsWith('audio/')) await addAudio(roomId, file);
+        else await addFile(roomId, file);
+      }
+      fetchData();
+    } catch (err) {
+      console.error('attach error:', err);
+    } finally {
+      setAttachLoading(false);
     }
   };
 
   if (showSettings) {
-    return <Settings onClose={() => setShowSettings(false)} />;
+    return <SettingsPage onClose={() => setShowSettings(false)} />;
   }
 
   return (
     <div className="h-screen flex flex-col bg-slate-50 dark:bg-slate-900 font-sans">
       {/* Header */}
-      <header className="flex-shrink-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3">
-        <div className="flex items-center gap-3">
-          {/* Logo + room */}
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-xs font-bold">CT</span>
+      <header className="flex-shrink-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
+        {/* Row 1: Logo + Room ID + Actions */}
+        <div className="px-4 py-2.5 flex items-center gap-2">
+          {/* Logo + room pill */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-indigo-200 dark:shadow-indigo-900/20 rotate-3">
+              <span className="text-white text-sm font-bold">C</span>
             </div>
-            <span className="text-slate-400 text-sm select-none hidden sm:block">ClayTablet</span>
+            <h1 className="text-base font-black tracking-tight text-slate-800 dark:text-white hidden sm:block">
+              Clay<span className="text-indigo-600 dark:text-indigo-400">Tablet</span>
+            </h1>
             <span className="text-slate-300 dark:text-slate-600 hidden sm:block">/</span>
-            <span className="font-semibold text-slate-800 dark:text-slate-100 truncate max-w-[120px] text-sm">
-              {roomId || '...'}
-            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-slate-100 dark:bg-slate-700 rounded-full border border-slate-200 dark:border-slate-600 text-sm font-mono text-slate-700 dark:text-slate-300 min-w-0">
+              <span className="text-slate-400 dark:text-slate-500 select-none text-xs hidden sm:inline">ID:</span>
+              <span className="truncate max-w-[100px]">{roomId || '...'}</span>
+            </div>
+            <ConnectionStatus isConnected={isConnected} />
           </div>
 
-          <div className="flex-1" />
+          {/* Room menu button */}
+          <div className="relative" ref={menuRef}>
+            <button
+              onClick={() => setShowRoomMenu(v => !v)}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-sm font-medium transition-colors ${showRoomMenu ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-200 dark:border-amber-700 text-amber-600 dark:text-amber-400' : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-amber-300 hover:text-amber-600 dark:hover:text-amber-400'}`}
+            >
+              <span className="hidden sm:inline">{t('room')}</span>
+              <ChevronDown size={13} className={`opacity-60 transition-transform ${showRoomMenu ? 'rotate-180' : ''}`} />
+            </button>
 
-          {/* Connection status */}
-          <ConnectionStatus isConnected={isConnected} />
+            {showRoomMenu && (
+              <div className="absolute top-10 right-0 w-64 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-2xl overflow-hidden z-50 py-2 animate-in slide-in-from-top-2 duration-150">
+                {/* Room input */}
+                <div className="px-3 pb-2 pt-1">
+                  <form onSubmit={handleRoomSwitch} className="flex gap-1.5">
+                    <input
+                      autoFocus
+                      value={roomInput}
+                      onChange={e => setRoomInput(e.target.value)}
+                      placeholder="Введите room ID..."
+                      className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-indigo-400/50"
+                    />
+                    <button type="submit" className="px-2.5 py-1.5 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600 transition-colors">
+                      <Plus size={14} />
+                    </button>
+                  </form>
+                </div>
 
-          {/* New room button */}
-          <button
-            onClick={() => setShowRoomInput(v => !v)}
-            title="Сменить комнату"
-            className="p-2 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          >
-            <Plus size={18} />
-          </button>
+                {/* Recent rooms */}
+                {recentRooms.length > 0 && (
+                  <>
+                    <div className="px-4 pb-1 text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                      <Clock size={11} /> {t('historyTitle')}
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                      {recentRooms.map(r => (
+                        <button
+                          key={r}
+                          onClick={() => { changeRoom(r); setShowRoomMenu(false); }}
+                          className={`w-full text-left px-4 py-2 text-sm flex items-center justify-between group transition-colors ${
+                            r === roomId
+                              ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
+                              : 'text-slate-600 dark:text-slate-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 hover:text-indigo-600'
+                          }`}
+                        >
+                          <span className="truncate pr-2">{r}</span>
+                          {r === roomId && <span className="text-[10px] bg-indigo-100 dark:bg-indigo-900/50 px-1.5 py-0.5 rounded shrink-0">{t('current')}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Refresh */}
           <button
@@ -152,53 +278,63 @@ export default function Board() {
             title="Обновить"
             className={`p-2 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors ${loading ? 'animate-spin' : ''}`}
           >
-            <RefreshCw size={18} />
+            <RefreshCw size={16} />
           </button>
 
-          {/* Settings */}
+          {/* Settings gear */}
           <button
             onClick={() => setShowSettings(true)}
             title="Настройки"
-            className="p-2 rounded-xl text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
           >
-            <Settings2 size={18} />
+            <Settings size={16} />
           </button>
         </div>
 
-        {/* Room input */}
-        {showRoomInput && (
-          <form onSubmit={handleRoomSwitch} className="mt-2 flex gap-2">
-            <input
-              autoFocus
-              value={roomInput}
-              onChange={e => setRoomInput(e.target.value)}
-              placeholder="Введите room_id..."
-              className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-indigo-400/50"
-            />
-            <button type="submit" className="px-3 py-1.5 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600 transition-colors">
-              Перейти
-            </button>
-          </form>
-        )}
-
-        {/* Recent rooms */}
-        {showRoomInput && recentRooms.length > 0 && (
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {recentRooms.map(r => (
+        {/* Row 2: Input bar (like browser) */}
+        <div className="px-4 pb-2.5">
+          <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-200 dark:border-slate-600 p-1.5">
+            <form onSubmit={handleSendNote} className="flex items-center gap-1.5">
               <button
-                key={r}
-                onClick={() => { changeRoom(r); setShowRoomInput(false); }}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
-                  r === roomId
-                    ? 'bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 hover:text-indigo-600'
-                }`}
+                type="button"
+                onClick={handlePasteClipboard}
+                disabled={!roomId}
+                title={t('pasteFromClipboard')}
+                className="p-2 text-slate-400 hover:text-indigo-500 transition-colors rounded-xl hover:bg-white dark:hover:bg-slate-700 disabled:opacity-40"
               >
-                {r === roomId ? `● ${r}` : r}
+                <Clipboard size={18} strokeWidth={2} />
               </button>
-            ))}
+
+              <button
+                type="button"
+                onClick={handleAttach}
+                disabled={!roomId || attachLoading}
+                title={t('attachFile')}
+                className="p-2 text-slate-400 hover:text-blue-500 transition-colors rounded-xl hover:bg-white dark:hover:bg-slate-700 disabled:opacity-40"
+              >
+                <Paperclip size={18} strokeWidth={2} />
+              </button>
+
+              <input
+                value={noteText}
+                onChange={e => setNoteText(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) handleSendNote(e as unknown as React.FormEvent); }}
+                placeholder={t('writeNote')}
+                disabled={!roomId || sendingNote}
+                className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-300 transition disabled:opacity-50"
+              />
+
+              <button
+                type="submit"
+                disabled={!noteText.trim() || !roomId || sendingNote}
+                title={t('sendText')}
+                className="p-2 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white shadow-sm transition-colors disabled:opacity-40"
+              >
+                <Send size={18} />
+              </button>
+            </form>
           </div>
-        )}
+        </div>
       </header>
 
       {/* Card grid */}
@@ -213,7 +349,7 @@ export default function Board() {
             <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-2xl">
               📋
             </div>
-            <p className="text-sm">Доска пуста. Создайте заметку!</p>
+            <p className="text-sm">{t('nothingFound')}</p>
           </div>
         )}
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-4 space-y-4">
@@ -264,9 +400,6 @@ export default function Board() {
           })}
         </div>
       </main>
-
-      {/* Bottom bar */}
-      <BottomBar roomId={roomId} onSent={fetchData} disabled={!roomId} />
     </div>
   );
 }

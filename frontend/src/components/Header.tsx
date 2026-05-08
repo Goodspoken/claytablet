@@ -67,6 +67,7 @@ export function Header({
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [goToInput, setGoToInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -76,7 +77,12 @@ export function Header({
   const { theme, toggleTheme } = useTheme();
   const { user, isLoading, logout } = useAuth();
 
-  const closeAll = () => { setIsManageOpen(false); setIsLangOpen(false); };
+  const closeAll = () => { setIsManageOpen(false); setIsLangOpen(false); setGoToInput(''); };
+  const handleGoToRoom = (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = goToInput.trim();
+    if (id) { closeAll(); navigate(`/${id}`); }
+  };
 
   const toggleRecording = async () => {
     if (isRecording && mediaRecorderRef.current) {
@@ -230,6 +236,23 @@ export function Header({
                   <Link to="/" className="px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-green-600 dark:hover:text-green-400 flex items-center gap-3 transition-colors">
                     <Plus size={16} /> {t('createNew')}
                   </Link>
+
+                  {/* Go to room */}
+                  <form onSubmit={handleGoToRoom} className="px-3 py-1.5 flex gap-1.5">
+                    <input
+                      value={goToInput}
+                      onChange={e => setGoToInput(e.target.value)}
+                      placeholder={t('goToRoomPlaceholder')}
+                      className="flex-1 min-w-0 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm outline-none focus:ring-2 focus:ring-indigo-400/50 text-slate-700 dark:text-slate-200"
+                    />
+                    <button
+                      type="submit"
+                      disabled={!goToInput.trim()}
+                      className="px-2.5 py-1.5 bg-indigo-500 hover:bg-indigo-600 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition-colors whitespace-nowrap"
+                    >
+                      {t('goToRoom')}
+                    </button>
+                  </form>
 
                   <button
                     onClick={() => { closeAll(); onToggleChat(); }}
