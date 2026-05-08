@@ -9,3 +9,4 @@ fastapi-sso
 PyJWT
 sentry-sdk[fastapi]
 qrcode
+apscheduler>=3.10

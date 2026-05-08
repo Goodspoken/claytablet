@@ -5,6 +5,7 @@ import asyncio
 import logging
 from collections import defaultdict
 from contextlib import asynccontextmanager
+from pathlib import Path as FSPath
 import sentry_sdk
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect, Path, Header, Query, Depends, Request
@@ -123,7 +124,9 @@ class PasswordVerification(BaseModel):
 # --- DB Helpers ---
 def touch_room(db: Session, room_id: str, owner_id: str = None, is_public: bool = False):
     """Update last activity timestamp for a room. Creates it if it doesn't exist."""
+    import asyncio
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
+    is_new = room is None
     if not room:
         ttl = "forever" if owner_id else "24h"
         room = models.Room(id=room_id, last_activity=time.time(), owner_id=owner_id, ttl=ttl, is_public=is_public)
@@ -132,6 +135,14 @@ def touch_room(db: Session, room_id: str, owner_id: str = None, is_public: bool 
         room.last_activity = time.time()
     db.commit()
     db.refresh(room)
+    if is_new:
+        # Fire hook without blocking the sync caller
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(plugin_manager.fire("on_room_created", room_id=room_id))
+        except RuntimeError:
+            pass
     return room
 
 def get_room_ttl(db: Session, room_id: str) -> int:
@@ -314,11 +325,21 @@ async def lifespan(app: FastAPI):
         seed_system_rooms(db)
     finally:
         db.close()
+
+    # Load plugins before starting scheduler so all @scheduled jobs are registered
+    plugins_dir = FSPath(os.path.dirname(__file__)).parent / "plugins"
+    plugin_manager.load_plugins(plugins_dir)
+    plugin_manager.start_scheduler()
+    app.include_router(plugin_manager.get_fastapi_router())
+    await plugin_manager.fire("on_startup")
+
     task = asyncio.create_task(cleanup_stale_rooms())
     logger.info("ClayTablet API started. SQLite DB attached. Cleanup task running every %ds.", CLEANUP_INTERVAL_SECONDS)
     print_lan_qr()
     yield
     task.cancel()
+    await plugin_manager.fire("on_shutdown")
+    plugin_manager.stop_scheduler()
     logger.info("ClayTablet API shutting down.")
 
 app = FastAPI(title="ClayTablet API", lifespan=lifespan)
@@ -376,6 +397,9 @@ async def broadcast_sync(room_id: str):
 
 # --- Auth Dependency ---
 from auth import router as auth_router, get_current_user_id_sync  # noqa: E402
+from plugin_manager import PluginManager  # noqa: E402
+
+plugin_manager = PluginManager()
 
 app.include_router(auth_router)
 
@@ -737,6 +761,7 @@ async def add_text(
     db.refresh(new_item)
     
     await broadcast_sync(room_id)
+    await plugin_manager.fire("on_text_added", room_id=room_id, content=item.content, item_id=new_item.id)
     return item_to_dict(new_item)
 
 # --- Shared upload helper (eliminates image/audio duplication) ---
@@ -816,6 +841,8 @@ async def _upload_media(
     db.refresh(new_item)
 
     await broadcast_sync(room_id)
+    if item_type == "image":
+        await plugin_manager.fire("on_image_added", room_id=room_id, filename=new_item.filename, item_id=new_item.id)
     return item_to_dict(new_item)
 
 
@@ -927,8 +954,9 @@ async def delete_item(
             
     db.delete(item)
     db.commit()
-    
+
     await broadcast_sync(room_id)
+    await plugin_manager.fire("on_item_deleted", room_id=room_id, item_id=item_id)
     return {"status": "ok"}
 
 # ---- Serve images ----
