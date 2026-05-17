@@ -196,10 +196,10 @@
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
   *Описание: Исправлены 6 критических проблем десктопа: реактивный переключатель языка (`useSyncExternalStore`), реактивная тема (`useTheme` hook), иконка-шестерёнка в Settings, версия приложения через `getVersion()` API, удалён orphan `BottomBar.tsx`, `verify_chat_access` для публичных readonly-комнат. Поле «Перейти в комнату» добавлено в дропдаун меню веб-фронтенда. Задеплоено на dubtab.app.*
 
-- [x] **Трек: Ребрендинг ClayTablet → DubTab + домен dubtab.pro**
-  *Приоритет: 🔴 Высокий* *(деплой выполнен, HTTPS ожидается ✅ 2026-05-12)*
+- [x] **Трек: Ребрендинг DubTab → ClayTablet + домен claytablet.online**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-17)*
   *Ссылка: [./tracks/rebranding_dubtab_20260512.md](./tracks/rebranding_dubtab_20260512.md)*
-  *Описание: Полный ребрендинг: имя DubTab (𒁾 DUB = шумерское "табличка/послание"), домен dubtab.pro (249₽/год). Заменены API пути, cookie, localStorage, CLI, Go module, Docker контейнеры, вся документация. Canvas: undo/redo (Ctrl+Z/Y), текстовый инструмент, фигуры (линия/прямоугольник/круг). Деплой на VPS в /opt/dubtab. Осталось: HTTPS сертификат (Caddy выпускает), переименовать папку на хосте, GitHub rename, OAuth callbacks.*
+  *Описание: Возврат к оригинальному бренду ClayTablet. Домен claytablet.online. Логотип из claytab.png → PNG иконки (512/192/180/32px) в PWA. Переезд на Clouvider UK VPS (213.255.246.146). CLI hardening: atotto/clipboard + go-keyring + context.Context + exponential backoff. RSS Auto-Post Plugin. 189 файлов в одном коммите f3e67c1.*
 
 - [x] **Трек: Canvas — Undo/Redo + текст + фигуры**
   *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-12)*
@@ -220,10 +220,10 @@
   *Ссылка: [./tracks/plugin_engine_20260508.md](./tracks/plugin_engine_20260508.md)*
   *Описание: Движок плагинов без изоляции для self-hosted пользователей. Установка: папка в `plugins/` + рестарт. `plugin_manager.py` + `plugin_sdk.py`. Хуки: `on_startup/shutdown`, `on_text_added`, `on_image_added`, `on_item_deleted`, `on_room_created`, `@scheduled(cron)`, `@http.get/post`. APScheduler для cron. Эндпоинты `/api/plugins`, `/api/plugins/{id}/config`. CLI-команды `dubtab plugin list/config/call`. TUI: режим плагинов (`p`). Веб: секция Плагины в Settings.*
 
-- [ ] **Трек: RSS Auto-Post Plugin — Первый встроенный плагин**
-  *Приоритет: 🟡 Средний* *(зависит от Plugin Engine)*
+- [x] **Трек: RSS Auto-Post Plugin — Первый встроенный плагин**
+  *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-17)*
   *Ссылка: [./tracks/plugin_rss_20260508.md](./tracks/plugin_rss_20260508.md)*
-  *Описание: Плагин парсит RSS/Atom-ленты по расписанию (`feedparser` + APScheduler) и постит новые записи в комнаты. Дедупликация по entry-id. Кастомные эндпоинты `/status`, `/config`. Служит proof-of-concept и примером для разработчиков плагинов.*
+  *Описание: `plugins/rss-fetcher/` — feedparser + APScheduler cron (каждый час). Дедупликация в памяти, per-feed interval_hours, emoji-prefix. Эндпоинты `/status`, `/config`, `/fetch-now`. Graceful error handling. 27/27 тестов проходят.*
 
 ---
 
@@ -242,3 +242,12 @@
   *Приоритет: 🔴 Высокий* *(завершено)*
   
   *Любой пользователь может включить Read-Only через настройки комнаты — защита от случайного удаления. Тоггл виден всем. Бэкенд (verify_write_access), фронтенд (баннер, отключение инпута и удаления) — всё работает.*
+
+---
+
+## 🖥️ Инфраструктура и хостинг
+
+- [x] **Трек: Переезд на Clouvider UK VPS**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-17)*
+  *Описание: Миграция с VPS `109.120.134.188` на Clouvider UK `213.255.246.146`. Архитектура: host-level Caddy (gsk-caddy) как единый reverse proxy, ClayTablet backend в `docker-compose.clouvider.yml` на порту 8777. Фронтенд собирается через Node.js 20 и отдаётся Caddy как static files. SSH hardening: порт 2203, пользователь `illz`. Clouvider VPS документирован в `clouvider.md`. DNS на `claytablet.online` ожидает propagation.*
+

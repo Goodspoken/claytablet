@@ -8,7 +8,7 @@
 
 ## Title (HN strict rules)
 
-> Show HN: DubTab – self-hosted real-time clipboard between all your devices
+> Show HN: ClayTablet – self-hosted real-time clipboard between all your devices
 
 Rules HN enforces:
 - Start with `Show HN:` (mandatory for projects)
@@ -19,19 +19,19 @@ Rules HN enforces:
 
 ## URL field
 
-`https://github.com/Goodspoken/dubtab`
+`https://github.com/Goodspoken/claytablet`
 
-(Not `dubtab.app` — HN prefers code repos for Show HN; you can link the live demo in the body)
+(Not `claytablet.online` — HN prefers code repos for Show HN; you can link the live demo in the body)
 
 ---
 
 ## Text field
 
-> Hi HN — DubTab is a small open-source project I've been running as my daily driver for a month. It's a "browser tab as a shared clipboard" — open a room URL on every device you own, anything you paste (text, image, voice note, file, drawing) appears on the other devices in real time via WebSocket.
+> Hi HN — ClayTablet is a small open-source project I've been running as my daily driver for a month. It's a "browser tab as a shared clipboard" — open a room URL on every device you own, anything you paste (text, image, voice note, file, drawing) appears on the other devices in real time via WebSocket.
 >
-> Live demo: https://dubtab.app — pick any room name.
+> Live demo: https://claytablet.online — pick any room name.
 >
-> Self-host with `docker compose up`. Comes with a Tauri desktop app, an Expo mobile app, a Go CLI (`dubtab`) with an interactive TUI, and a plugin engine where you drop a Python file with `@hook("on_text_added")` / `@scheduled(cron)` / `@http.get` decorators.
+> Self-host with `docker compose up`. Comes with a Tauri desktop app, an Expo mobile app, a Go CLI (`claytablet`) with an interactive TUI, and a plugin engine where you drop a Python file with `@hook("on_text_added")` / `@scheduled(cron)` / `@http.get` decorators.
 >
 > Stack: FastAPI + SQLite + WebSocket, React 19, Caddy for auto-HTTPS. Background and the things I'd push back on if I were reviewing this:
 >
@@ -39,9 +39,9 @@ Rules HN enforces:
 > - **Plugin engine has no sandbox** — drops directly into the FastAPI process. Same trust model as Home Assistant custom components or n8n self-hosted nodes.
 > - **It's a clipboard, not a vault.** Bcrypt on room passwords, rate limit on brute-force, but data at rest is plaintext SQLite. Treat it like Pastebin you control.
 >
-> What I'd love feedback on: the plugin API surface (small but I'm not sure it's the right shape), and whether the public dubtab.app demo feels useful enough to bookmark.
+> What I'd love feedback on: the plugin API surface (small but I'm not sure it's the right shape), and whether the public claytablet.online demo feels useful enough to bookmark.
 >
-> Repo: https://github.com/Goodspoken/dubtab
+> Repo: https://github.com/Goodspoken/claytablet
 
 ---
 
@@ -65,7 +65,7 @@ Rules HN enforces:
 
 ## Pre-launch checks
 
-- [ ] `dubtab.app` health check is green
+- [ ] `claytablet.online` health check is green
 - [ ] Demo room can handle ~50 concurrent WS connections (rate limit currently 50/room — bump to 200 before launch)
 - [ ] Server CPU/memory headroom (watch for plugin-loaded memory)
 - [ ] OAuth callbacks work on production (Google + Yandex)

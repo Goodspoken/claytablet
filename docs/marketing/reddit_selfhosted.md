@@ -8,11 +8,11 @@
 
 ## Title (pick one — A/B in your head before posting)
 
-> DubTab — self-hosted real-time clipboard sync between all your devices (text, images, voice, files)
+> ClayTablet — self-hosted real-time clipboard sync between all your devices (text, images, voice, files)
 
 Alternative titles:
 - *I built a self-hosted alternative to Pushbullet/AirDrop — runs in one Docker container*
-- *Show: DubTab — a "browser tab as a clipboard" for your whole device fleet*
+- *Show: ClayTablet — a "browser tab as a clipboard" for your whole device fleet*
 - *Open-source clipboard sync for self-hosters — web, desktop (Tauri), mobile (Expo), CLI, plugin engine*
 
 ---
@@ -21,14 +21,14 @@ Alternative titles:
 
 Hi r/selfhosted 👋
 
-I got tired of copy-pasting things between my laptop, two phones, a Pi, and a work box. Pushbullet got worse, AirDrop is Apple-only, KDE Connect is great but doesn't help with my browser tab on a guest laptop. So I built **DubTab** — a self-hostable clipboard that lives in a browser tab.
+I got tired of copy-pasting things between my laptop, two phones, a Pi, and a work box. Pushbullet got worse, AirDrop is Apple-only, KDE Connect is great but doesn't help with my browser tab on a guest laptop. So I built **ClayTablet** — a self-hostable clipboard that lives in a browser tab.
 
 You open a room URL on any device → anything you paste (text, image, voice note, file, even a freehand drawing) shows up on every other device in real time via WebSocket. That's the whole pitch.
 
 **Quick start (one command):**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Goodspoken/dubtab/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Goodspoken/claytablet/main/install.sh | bash
 ```
 
 Auto-generates a JWT secret, detects your LAN IP, prints a QR code for your phone. Or just spin up the `docker-compose.yml` from the repo. No external dependencies — SQLite on the host filesystem, that's it.
@@ -38,18 +38,18 @@ Auto-generates a JWT secret, detects your LAN IP, prints a QR code for your phon
 - 🌐 **Web app** (React + Tailwind, dark mode, RU/EN)
 - 🖥️ **Desktop app** — Tauri 2, Win/Linux/macOS, system tray, global hotkeys (`Ctrl+Shift+V` to paste from current room)
 - 📱 **Mobile app** — React Native / Expo (separate repo)
-- ⌨️ **CLI** — `dubtab` Go binary with subcommands + a `tui` mode (live board in your terminal via bubbletea)
+- ⌨️ **CLI** — `claytablet` Go binary with subcommands + a `tui` mode (live board in your terminal via bubbletea)
 - 🔌 **Plugin engine** — drop a Python file in `plugins/`, restart, you get `@hook("on_text_added")`, `@scheduled("0 9 * * *")`, `@http.get("/status")` decorators
-- 📲 **PWA Share Target** — "Add to Home Screen" on Android/iOS and DubTab appears in the system share menu like Google Drive
+- 📲 **PWA Share Target** — "Add to Home Screen" on Android/iOS and ClayTablet appears in the system share menu like Google Drive
 - 🔐 Password-protected + read-only rooms, bcrypt, rate-limited brute-force defense
 - 🆓 MIT, no telemetry by default, no SaaS upsell
 
 **Tech stack** (in case it matters):
 FastAPI + SQLite + Alembic (backend), React 19 + Zustand (frontend), Caddy with auto Let's Encrypt (proxy), all dockerized.
 
-**Public demo** if you just want to poke at it: https://dubtab.app — pick any room name and paste from your phone/laptop. Rooms auto-expire after 24h unless you log in.
+**Public demo** if you just want to poke at it: https://claytablet.online — pick any room name and paste from your phone/laptop. Rooms auto-expire after 24h unless you log in.
 
-**Repo:** https://github.com/Goodspoken/dubtab
+**Repo:** https://github.com/Goodspoken/claytablet
 
 It's been my daily driver for about a month. Honest critique very welcome — especially around the plugin model (no isolation, "you self-host, you trust it") and the threat model (it's a clipboard, not a vault, but bcrypt + rate limit + per-room JWT are there).
 
@@ -63,7 +63,7 @@ What I'd love to know from this sub:
 ## Comments to prepare for
 
 - **"How is this different from KDE Connect / Syncthing / SnapDrop / LocalSend?"**
-  → KDE Connect is great peer-to-peer LAN, but no server-side history, no chat, no plugins. Syncthing is file-only and pull-based. SnapDrop/LocalSend is one-shot transfer. DubTab is the "shared tab/board" niche — persistent across reloads, accessible from a borrowed laptop in the browser, has chat, plugins, OAuth.
+  → KDE Connect is great peer-to-peer LAN, but no server-side history, no chat, no plugins. Syncthing is file-only and pull-based. SnapDrop/LocalSend is one-shot transfer. ClayTablet is the "shared tab/board" niche — persistent across reloads, accessible from a borrowed laptop in the browser, has chat, plugins, OAuth.
 
 - **"Why not federation? Why no E2EE?"**
   → Honest answer: scope creep. v1 is a clipboard. E2EE is on the roadmap but breaks server-side dedup, full-text search, plugins reading content. Self-host gives you the strongest guarantee until then.
@@ -85,7 +85,7 @@ What I'd love to know from this sub:
 
 - [ ] Demo GIF is in the README (max ~5 MB for Reddit preview)
 - [ ] `install.sh` actually works on a clean Ubuntu
-- [ ] `dubtab.app` is up (health check passes)
+- [ ] `claytablet.online` is up (health check passes)
 - [ ] At least 2-3 stars on GitHub (looks bare otherwise — ask a friend)
 - [ ] OAuth on the public demo works (test Google + Yandex)
 - [ ] Set aside 4-6 hours after posting to reply to every comment within an hour
