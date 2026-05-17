@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/claytablet/cli/api"
+	"github.com/Goodspoken/dubtab/cli/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,13 +12,13 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new [id]",
 	Short: "Создать новую комнату и переключиться на неё",
-	Example: `  claytab new               # случайный ID
-  claytab new my-room       # конкретный ID`,
+	Example: `  dubtab new               # случайный ID
+  dubtab new my-room       # конкретный ID`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	RunE: func(cmd *cobra.Command, args []string) error {
 		server := viper.GetString("server")
 		if server == "" {
-			server = "https://claytablet.online"
+			server = "https://dubtab.app"
 		}
 
 		var roomID string
@@ -29,7 +29,7 @@ var newCmd = &cobra.Command{
 		}
 
 		tmpClient := api.New(server, roomID, "", viper.GetString("token"))
-		_, err := tmpClient.GetRoom()
+		_, err := tmpClient.GetRoom(cmd.Context())
 		if err != nil {
 			return fmt.Errorf("не удалось создать комнату: %w", err)
 		}

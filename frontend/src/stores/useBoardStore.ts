@@ -79,7 +79,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   copiedId: null,
   isDragging: false,
   newNote: '',
-  username: localStorage.getItem('claytablet_username') || '',
+  username: localStorage.getItem('dubtab_username') || '',
 
   // Modals
   isSettingsOpen: false,
@@ -326,7 +326,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'ClayTablet',
+          title: 'DubTab',
           text: item.type === 'text' ? item.content : undefined,
           url: shareUrl,
         });
@@ -355,7 +355,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   handleSetUsername: (name) => {
     set({ username: name });
-    localStorage.setItem('claytablet_username', name);
+    localStorage.setItem('dubtab_username', name);
   },
 
   handleUpdateSettings: async (settings, showToast, t) => {

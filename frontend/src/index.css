@@ -3,13 +3,19 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --background: #faf7f4;
+  --foreground: #2d1f14;
+  --accent: #c1723a;
+  --accent-light: #d4956a;
+  --accent-dark: #9a5427;
 }
 
 .dark {
-  --background: #0f172a;
-  --foreground: #e2e8f0;
+  --background: #1a110a;
+  --foreground: #f0e6d8;
+  --accent: #c1723a;
+  --accent-light: #d4956a;
+  --accent-dark: #9a5427;
 }
 
 body {

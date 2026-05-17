@@ -1,8 +1,8 @@
 import axios, { AxiosError } from 'axios';
-import type { ClipboardItem, ChatMsg, RoomSettings } from './types';
+import type { ClipboardItem, ChatMsg, RoomSettings, PluginInfo } from './types';
 
 // ---- Multi-backend: custom server URL support ----
-const CUSTOM_SERVER_KEY = 'claytablet_custom_server';
+const CUSTOM_SERVER_KEY = 'dubtab_custom_server';
 
 export function getBaseUrl(): string {
   return localStorage.getItem(CUSTOM_SERVER_KEY) || '';
@@ -33,7 +33,7 @@ axios.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
     const url = error.config?.url || '';
-    if (url.includes('/api/claytablet/') || url.includes('/api/ws/')) {
+    if (url.includes('/api/dubtab/') || url.includes('/api/ws/')) {
       if (error.response?.status === 401) {
         window.dispatchEvent(new CustomEvent('password:required'));
       } else if (error.response?.status === 403) {
@@ -63,7 +63,7 @@ export async function fetchClipboard(roomId: string): Promise<{
   settings: RoomSettings;
   layoutOrder: string[];
 }> {
-  const res = await axios.get<ClipboardResponse>(`${getBaseUrl()}/api/claytablet/${roomId}`, { headers: getAuthHeaders(roomId) });
+  const res = await axios.get<ClipboardResponse>(`${getBaseUrl()}/api/dubtab/${roomId}`, { headers: getAuthHeaders(roomId) });
   const texts: ClipboardItem[] = res.data.texts.map(t => ({ ...t, type: 'text' as const }));
   const images: ClipboardItem[] = res.data.images.map(i => ({ ...i, type: 'image' as const }));
   const audios: ClipboardItem[] = res.data.audios.map(a => ({ ...a, type: 'audio' as const }));
@@ -78,56 +78,56 @@ export async function fetchClipboard(roomId: string): Promise<{
 }
 
 export async function addText(roomId: string, content: string) {
-  return axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/text`, { content }, { headers: getAuthHeaders(roomId) });
+  return axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/text`, { content }, { headers: getAuthHeaders(roomId) });
 }
 
 export async function addImage(roomId: string, file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/image`, formData, { headers: getAuthHeaders(roomId) });
+  return axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/image`, formData, { headers: getAuthHeaders(roomId) });
 }
 
 export async function addAudio(roomId: string, file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/audio`, formData, { headers: getAuthHeaders(roomId) });
+  return axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/audio`, formData, { headers: getAuthHeaders(roomId) });
 }
 
 export async function addFile(roomId: string, file: File) {
   const formData = new FormData();
   formData.append('file', file);
-  return axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/file`, formData, { headers: getAuthHeaders(roomId) });
+  return axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/file`, formData, { headers: getAuthHeaders(roomId) });
 }
 
 export async function addChat(roomId: string, author: string, text: string) {
-  return axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/chat`, { author, text }, { headers: getAuthHeaders(roomId) });
+  return axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/chat`, { author, text }, { headers: getAuthHeaders(roomId) });
 }
 
 export async function deleteItem(roomId: string, itemId: string) {
-  return axios.delete(`${getBaseUrl()}/api/claytablet/${roomId}/${itemId}`, { headers: getAuthHeaders(roomId) });
+  return axios.delete(`${getBaseUrl()}/api/dubtab/${roomId}/${itemId}`, { headers: getAuthHeaders(roomId) });
 }
 
 export async function clearAll(roomId: string) {
-  return axios.delete(`${getBaseUrl()}/api/claytablet/${roomId}/all`, { headers: getAuthHeaders(roomId) });
+  return axios.delete(`${getBaseUrl()}/api/dubtab/${roomId}/all`, { headers: getAuthHeaders(roomId) });
 }
 
 export async function getRoomSettings(roomId: string): Promise<RoomSettings> {
-  const res = await axios.get<RoomSettings>(`${getBaseUrl()}/api/claytablet/${roomId}/settings`, { headers: getAuthHeaders(roomId) });
+  const res = await axios.get<RoomSettings>(`${getBaseUrl()}/api/dubtab/${roomId}/settings`, { headers: getAuthHeaders(roomId) });
   return res.data;
 }
 
 export async function updateRoomSettings(roomId: string, settings: RoomSettings): Promise<RoomSettings> {
-  const res = await axios.post<RoomSettings>(`${getBaseUrl()}/api/claytablet/${roomId}/settings`, settings, { headers: getAuthHeaders(roomId) });
+  const res = await axios.post<RoomSettings>(`${getBaseUrl()}/api/dubtab/${roomId}/settings`, settings, { headers: getAuthHeaders(roomId) });
   return res.data;
 }
 
 export async function updateOrder(roomId: string, order: string[]) {
-  return axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/order`, { order }, { headers: getAuthHeaders(roomId) });
+  return axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/order`, { order }, { headers: getAuthHeaders(roomId) });
 }
 
 export async function verifyPassword(roomId: string, password: string): Promise<boolean> {
   try {
-    await axios.post(`${getBaseUrl()}/api/claytablet/${roomId}/verify-password`, { password });
+    await axios.post(`${getBaseUrl()}/api/dubtab/${roomId}/verify-password`, { password });
     sessionStorage.setItem(`room_token_${roomId}`, password);
     return true;
   } catch (error) {
@@ -151,12 +151,12 @@ export async function getMyRooms() {
 }
 
 export async function getPublicRooms() {
-  const res = await axios.get(`${getBaseUrl()}/api/claytablet/rooms/public`);
+  const res = await axios.get(`${getBaseUrl()}/api/dubtab/rooms/public`);
   return res.data;
 }
 
 export async function getSystemRooms() {
-  const res = await axios.get(`${getBaseUrl()}/api/claytablet/rooms/system`);
+  const res = await axios.get(`${getBaseUrl()}/api/dubtab/rooms/system`);
   return res.data;
 }
 
@@ -171,4 +171,20 @@ export async function getCliToken(): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+// ---- Plugin API ----
+
+export async function getPlugins(): Promise<PluginInfo[]> {
+  const res = await axios.get(`${getBaseUrl()}/api/plugins`);
+  return res.data;
+}
+
+export async function getPluginConfig(pluginId: string): Promise<unknown> {
+  const res = await axios.get(`${getBaseUrl()}/api/plugins/${pluginId}/config`);
+  return res.data;
+}
+
+export async function setPluginConfig(pluginId: string, config: unknown): Promise<void> {
+  await axios.post(`${getBaseUrl()}/api/plugins/${pluginId}/config`, config);
 }

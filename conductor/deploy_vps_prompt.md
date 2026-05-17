@@ -92,7 +92,7 @@ ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "cd /opt/clipboard && do
 
 ### Шаг 5. Финальная проверка приложения
 
-Открой в браузере: **`https://claytablet.online`**
+Открой в браузере: **`https://dubtab.app`**
 
 Убедись что:
 - [ ] Страница открывается без ошибок SSL
@@ -106,13 +106,13 @@ ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "cd /opt/clipboard && do
 
 **Caddy не поднимается (503 / Caddy ошибка SSL):**
 ```bash
-ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "docker logs claytablet-frontend 2>&1 | tail -50"
+ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "docker logs dubtab-frontend 2>&1 | tail -50"
 ```
 Вероятная причина: порт 80 или 443 занят на VPS. Проверь: `sudo ss -tlnp | grep -E ':80|:443'`
 
 **Backend не отвечает:**
 ```bash
-ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "docker logs claytablet-backend 2>&1 | tail -30"
+ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "docker logs dubtab-backend 2>&1 | tail -30"
 ```
 
 **Быстрый рестарт без пересборки (если уже собрано):**
@@ -125,6 +125,6 @@ ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 "cd /opt/clipboard && do
 ## Результат
 
 После успешного деплоя сообщи пользователю:
-- Ссылка: `https://claytablet.online`
+- Ссылка: `https://dubtab.app`
 - Статус контейнеров (вывод `docker compose ps`)
 - Версию из CHANGELOG если доступна (сейчас v2.2.0)

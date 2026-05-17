@@ -55,12 +55,12 @@
   *Приоритет: 🟢 Низкий* *(завершено)*
   *Описание: Dropdown с выбором формата: .txt, .md (Markdown), .zip (тексты + медиафайлы).*
 
-- [x] **Трек: Ребрендинг + деплой на claytablet.online + OAuth**
+- [x] **Трек: Ребрендинг + деплой на dubtab.app + OAuth**
   *Приоритет: 🔴 Высокий* *(завершён ✅)*
   *Ссылка: [./tracks/rebranding_auth_20260424.md](./tracks/rebranding_auth_20260424.md)*
-  *Описание: Домен claytablet.online + claytablet.ru запущен. Caddy + Let’s Encrypt работают. Google OAuth (опубликован) + Yandex OAuth включены и протестированы. Авторизация работает!*
+  *Описание: Домен dubtab.app + dubtab.ru запущен. Caddy + Let’s Encrypt работают. Google OAuth (опубликован) + Yandex OAuth включены и протестированы. Авторизация работает!*
 
-- [x] **Трек: Фикс тестов + Первый деплой на VPS (claytablet.online)**
+- [x] **Трек: Фикс тестов + Первый деплой на VPS (dubtab.app)**
   *Приоритет: 🔴 Критический* *(завершён ✅)*
   *Ссылка: [./tracks/deploy_and_fixes_20260426.md](./tracks/deploy_and_fixes_20260426.md)*
   *Описание: Восстановление окружения. Починены тесты. Фикс conftest.py, engine.dispose, безопасный Room ID. Полный деплой VPS, SSL, DNS настроены.*
@@ -80,9 +80,9 @@
 
 ## 🔥 Future Roadmap (Масштабное видение)
 
-- [x] **Трек: Полное переименование проекта (PopyCast -> ClayTablet)**
+- [x] **Трек: Полное переименование проекта (PopyCast -> DubTab)**
   *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-04)*
-  *Ссылка: [./tracks/rename_to_claytablet.md](./tracks/rename_to_claytablet.md)*
+  *Ссылка: [./tracks/rename_to_dubtab.md](./tracks/rename_to_dubtab.md)*
   *Описание: Безопасное переименование корневых папок, docker volumes, бэкенд роутов и файлов баз данных для устранения путаницы в названиях.*
 
 - [x] **Трек: Настольное приложение (Desktop App)**
@@ -103,7 +103,7 @@
 - [x] **Трек: Мобильное приложение — Expo (Gemini CLI Pro)**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
   *Ссылка: [./tracks/mobile_app_gemini_20260506.md](./tracks/mobile_app_gemini_20260506.md)*
-  *GitHub: https://github.com/Goodspoken/claytablet-mobile*
+  *GitHub: https://github.com/Goodspoken/dubtab-mobile*
   *Описание: React Native + Expo SDK 54, Expo Router v6, managed workflow. HomeScreen (ввод ID, история 8 комнат, QR-сканер), BoardScreen (FlatList + WebSocket + кэш offline), BottomBar (текст/фото/аудио), TextCard/ImageCard/AudioCard, Settings. Ревью выполнено Claude Code — исправлен adaptive-icon, версия 0.2.0, кнопка Save в Settings. Запущено тестирование через `npx expo start`.*
 
 - [ ] **Трек: AI и Agentic интеграция (Умный холст)**
@@ -175,14 +175,14 @@
 
   **Почему не форки:** форки разбивают комьюнити. Один репо с хорошим governance — как Vite, n8n, Shadcn.
 
-- [x] **Трек: Терминал CLI (`claytab`)**
+- [x] **Трек: Терминал CLI (`dubtab`)**
   *Приоритет: 🟡 Долгосрочно* *(завершено ✅ 2026-04-28)*
   
-  Go-бинарник `claytab`: ls, send, copy/cp, show, rm, clear, watch, room, rooms, new, me, login, logout, config. Алиасы в стиле shell. Задеплоен на Serverbook. TUI (интерактивная доска в терминале) — следующий шаг.*
+  Go-бинарник `dubtab`: ls, send, copy/cp, show, rm, clear, watch, room, rooms, new, me, login, logout, config. Алиасы в стиле shell. Задеплоен на Serverbook. TUI (интерактивная доска в терминале) — следующий шаг.*
 
 - [x] **Трек: TUI — интерактивная доска в терминале**
   *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-04)*
-  *Описание: `claytab tui` — живая доска прямо в терминале (bubbletea + lipgloss). Список записей, навигация стрелками, Enter — копировать, d — удалить, WS-стрим в реальном времени.*
+  *Описание: `dubtab tui` — живая доска прямо в терминале (bubbletea + lipgloss). Список записей, навигация стрелками, Enter — копировать, d — удалить, WS-стрим в реальном времени.*
 
 ---
 
@@ -194,12 +194,31 @@
 
 - [x] **Трек: Desktop UX-фиксы v0.2.x + Навигация по комнатам**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
-  *Описание: Исправлены 6 критических проблем десктопа: реактивный переключатель языка (`useSyncExternalStore`), реактивная тема (`useTheme` hook), иконка-шестерёнка в Settings, версия приложения через `getVersion()` API, удалён orphan `BottomBar.tsx`, `verify_chat_access` для публичных readonly-комнат. Поле «Перейти в комнату» добавлено в дропдаун меню веб-фронтенда. Задеплоено на claytablet.online.*
+  *Описание: Исправлены 6 критических проблем десктопа: реактивный переключатель языка (`useSyncExternalStore`), реактивная тема (`useTheme` hook), иконка-шестерёнка в Settings, версия приложения через `getVersion()` API, удалён orphan `BottomBar.tsx`, `verify_chat_access` для публичных readonly-комнат. Поле «Перейти в комнату» добавлено в дропдаун меню веб-фронтенда. Задеплоено на dubtab.app.*
 
-- [ ] **Трек: Plugin Engine — Ядро системы плагинов**
-  *Приоритет: 🔴 Высокий* *(в работе)*
+- [x] **Трек: Ребрендинг ClayTablet → DubTab + домен dubtab.pro**
+  *Приоритет: 🔴 Высокий* *(деплой выполнен, HTTPS ожидается ✅ 2026-05-12)*
+  *Ссылка: [./tracks/rebranding_dubtab_20260512.md](./tracks/rebranding_dubtab_20260512.md)*
+  *Описание: Полный ребрендинг: имя DubTab (𒁾 DUB = шумерское "табличка/послание"), домен dubtab.pro (249₽/год). Заменены API пути, cookie, localStorage, CLI, Go module, Docker контейнеры, вся документация. Canvas: undo/redo (Ctrl+Z/Y), текстовый инструмент, фигуры (линия/прямоугольник/круг). Деплой на VPS в /opt/dubtab. Осталось: HTTPS сертификат (Caddy выпускает), переименовать папку на хосте, GitHub rename, OAuth callbacks.*
+
+- [x] **Трек: Canvas — Undo/Redo + текст + фигуры**
+  *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-12)*
+  *Описание: CanvasModal.tsx — undo/redo до 30 шагов (Ctrl+Z/Y + кнопки), текстовый инструмент с floating input, шаблоны линия/прямоугольник/круг с live preview. Новые i18n ключи RU/EN.*
+
+- [x] **Трек: Аудит и hardening (Opus review)**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-11)*
+  *Ссылка: [./tracks/audit_and_hardening_20260511.md](./tracks/audit_and_hardening_20260511.md)*
+  *Описание: Полный код-аудит после Plugin Engine + PWA Share Target. Починены 3 критичных бага (открытый plugin config API, потерянный `on_room_created` из sync-пути, захардкоженный Sentry DSN), 5 важных (lint, битая ссылка, рост SW-кэша, дублирование auth-логики, размер main.py 976→834). Все 27 pytest, lint, build, ruff — clean.*
+
+- [x] **Трек: PWA Share Target — Шаринг с телефона в доску**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-11)*
+  *Ссылка: [./tracks/pwa_share_target_20260511.md](./tracks/pwa_share_target_20260511.md)*
+  *Описание: Web Share Target API — DubTab появляется в системном меню «Поделиться» на Android/iOS. Service Worker перехватывает POST, кладёт файлы во временный Cache API, редиректит на `/share?key=...`. Страница `SharePage` показывает превью и список последних комнат. Поддержка: фото, аудио, файлы, текст, ссылки. Задеплоено на dubtab.app.*
+
+- [x] **Трек: Plugin Engine — Ядро системы плагинов**
+  *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-08)*
   *Ссылка: [./tracks/plugin_engine_20260508.md](./tracks/plugin_engine_20260508.md)*
-  *Описание: Движок плагинов без изоляции для self-hosted пользователей. Установка: папка в `plugins/` + рестарт. `plugin_manager.py` + `plugin_sdk.py`. Хуки: `on_startup/shutdown`, `on_text_added`, `on_image_added`, `on_item_deleted`, `on_room_created`, `@scheduled(cron)`, `@http.get/post`. APScheduler для cron. Эндпоинты `/api/plugins`, `/api/plugins/{id}/config`. Первый плагин — RSS — валидирует всю систему.*
+  *Описание: Движок плагинов без изоляции для self-hosted пользователей. Установка: папка в `plugins/` + рестарт. `plugin_manager.py` + `plugin_sdk.py`. Хуки: `on_startup/shutdown`, `on_text_added`, `on_image_added`, `on_item_deleted`, `on_room_created`, `@scheduled(cron)`, `@http.get/post`. APScheduler для cron. Эндпоинты `/api/plugins`, `/api/plugins/{id}/config`. CLI-команды `dubtab plugin list/config/call`. TUI: режим плагинов (`p`). Веб: секция Плагины в Settings.*
 
 - [ ] **Трек: RSS Auto-Post Plugin — Первый встроенный плагин**
   *Приоритет: 🟡 Средний* *(зависит от Plugin Engine)*

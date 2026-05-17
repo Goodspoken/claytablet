@@ -1,8 +1,8 @@
-# 📋 PASSPORT — ClayTablet Project
+# 📋 PASSPORT — DubTab Project
 
-> **Версия:** 0.2.1
-> **Дата обновления:** 2026-05-07
-> **Статус:** 🔵 Тестирование. Продакшен на claytablet.online. Десктоп v0.2.0 на GitHub Releases (v0.2.1 pending).
+> **Версия:** 0.3.0
+> **Дата обновления:** 2026-05-12
+> **Статус:** 🟡 Ребрендинг задеплоен. HTTPS dubtab.pro ожидает сертификат. Папка на хосте ещё называется popycast.
 
 ---
 
@@ -20,7 +20,7 @@
 
 ## Что это
 
-**ClayTablet** — веб-платформа для мгновенного обмена текстом, изображениями, аудио и сообщениями между устройствами в реальном времени. Построена на концепции «комнат» — изолированных досок с уникальным коротким URL. Синхронизация через WebSocket.
+**DubTab** — веб-платформа для мгновенного обмена текстом, изображениями, аудио и сообщениями между устройствами в реальном времени. Построена на концепции «комнат» — изолированных досок с уникальным коротким URL. Синхронизация через WebSocket.
 
 **Целевое применение:** личный инструмент для быстрого обмена данными между компьютерами и телефонами, а также совместная работа с друзьями/коллегами по ссылке.
 
@@ -34,7 +34,7 @@
 | **Backend** | Python 3.11, FastAPI, Uvicorn, WebSocket |
 | **Desktop** | Tauri v2 (Rust + WebView), Windows / Linux / macOS |
 | **Mobile** | React Native + Expo SDK 52 (в разработке) |
-| **CLI** | Go-бинарник `claytab` |
+| **CLI** | Go-бинарник `dubtab` |
 | **Proxy** | Caddy (автоматический HTTPS, Let's Encrypt) |
 | **Container** | Docker + Docker Compose |
 | **Storage** | SQLite (SQLAlchemy + Alembic) + файловая система (media volume) |
@@ -60,8 +60,8 @@
 
 | Окружение | Frontend | Backend API |
 |---|---|---|
-| Production | `https://claytablet.online` (ожидание DNS) | `https://claytablet.online/api` |
-| Mirror | `https://claytablet.ru` (ожидание DNS) | - |
+| Production | `https://dubtab.pro` | `https://dubtab.pro/api` |
+| Legacy redirect | `https://claytablet.online` → `dubtab.pro` | - |
 | Backend direct | `http://109.120.134.188:8555/api/health` | ✅ Отвечает |
 | Local Dev | `http://localhost:5173` | `http://localhost:8555` |
 
@@ -99,7 +99,7 @@ popycast/
 │   │   ├── helpers.ts       # Утилиты (вкл. безопасный generateId)
 │   │   ├── i18n.ts          # Словари переводов RU/EN
 │   │   └── utils.tsx        # Утилиты (timeAgo, linkify, clipboard)
-│   ├── Caddyfile            # claytablet.online + claytablet.ru redirect
+│   ├── Caddyfile            # dubtab.app + dubtab.ru redirect
 │   ├── Dockerfile           # Multi-stage: node builder → caddy:alpine
 │   └── .dockerignore
 ├── conductor/
@@ -120,17 +120,17 @@ popycast/
 | Метод | URL | Описание |
 |---|---|---|
 | `GET` | `/api/health` | Healthcheck |
-| `GET` | `/api/claytablet/{room_id}` | Данные комнаты (тексты + картинки + аудио + чат + настройки) |
-| `POST` | `/api/claytablet/{room_id}/text` | Добавить текст |
-| `POST` | `/api/claytablet/{room_id}/image` | Загрузить картинку (multipart/form-data) |
-| `POST` | `/api/claytablet/{room_id}/audio` | Загрузить аудио (multipart/form-data) |
-| `POST` | `/api/claytablet/{room_id}/chat` | Сообщение в чат |
-| `GET` | `/api/claytablet/{room_id}/settings` | Получить настройки комнаты |
-| `POST` | `/api/claytablet/{room_id}/settings` | Обновить настройки (TTL, пароль) |
-| `POST` | `/api/claytablet/{room_id}/order` | Обновить порядок карточек |
-| `POST` | `/api/claytablet/{room_id}/verify-password` | Проверить пароль комнаты |
-| `DELETE` | `/api/claytablet/{room_id}/all` | Очистить всю комнату |
-| `DELETE` | `/api/claytablet/{room_id}/{item_id}` | Удалить элемент |
+| `GET` | `/api/dubtab/{room_id}` | Данные комнаты (тексты + картинки + аудио + чат + настройки) |
+| `POST` | `/api/dubtab/{room_id}/text` | Добавить текст |
+| `POST` | `/api/dubtab/{room_id}/image` | Загрузить картинку (multipart/form-data) |
+| `POST` | `/api/dubtab/{room_id}/audio` | Загрузить аудио (multipart/form-data) |
+| `POST` | `/api/dubtab/{room_id}/chat` | Сообщение в чат |
+| `GET` | `/api/dubtab/{room_id}/settings` | Получить настройки комнаты |
+| `POST` | `/api/dubtab/{room_id}/settings` | Обновить настройки (TTL, пароль) |
+| `POST` | `/api/dubtab/{room_id}/order` | Обновить порядок карточек |
+| `POST` | `/api/dubtab/{room_id}/verify-password` | Проверить пароль комнаты |
+| `DELETE` | `/api/dubtab/{room_id}/all` | Очистить всю комнату |
+| `DELETE` | `/api/dubtab/{room_id}/{item_id}` | Удалить элемент |
 | `GET` | `/api/files/{filename}` | Получить медиафайл |
 | `WS` | `/api/ws/rooms/{room_id}` | WebSocket канал комнаты |
 
@@ -180,6 +180,21 @@ popycast/
 
 ---
 
+## 🚨 TODO после пересоздания контейнера (2026-05-12)
+
+1. **Проверить HTTPS**: `curl -s https://dubtab.pro/api/health` → должно вернуть `{"status":"ok"}`
+   - Если нет: `ssh illz@serverbook "ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 'cd /opt/dubtab && sudo docker compose logs frontend --tail=50'"`
+2. **GitHub**: Settings → Rename repo `claytablet` → `dubtab`
+3. **OAuth**: добавить `https://dubtab.pro` в Google Console + Yandex callbacks
+4. **UptimeRobot**: добавить монитор `https://dubtab.pro/api/health`
+5. **Лого**: финальный PNG (𒁾 DUB на табличке) → `frontend/public/` + обновить manifest.json
+6. **Demo GIF**: записать по `docs/marketing/demo_gif_howto.md` → `docs/demo.gif`
+7. **Open Source запуск**: Reddit r/selfhosted + HN (тексты в `docs/marketing/`)
+8. **Папка**: переименовать `popycast` → `dubtab` на хосте (см. трек rebranding_dubtab_20260512.md)
+9. **VPS cleanup**: удалить `/opt/claytablet` после проверки `dubtab.pro`
+
+---
+
 ## Деплой
 
 ```bash
@@ -188,26 +203,26 @@ popycast/
 # Шаг 1: devcontainer → Serverbook
 rsync -avz --exclude '.git' --exclude 'node_modules' --exclude 'frontend/dist' \
   --exclude 'data' --exclude '__pycache__' --exclude '.agents' \
-  /home/vscode/popycast/ illz@serverbook:/srv/storage/Projects/claytablet/
+  /home/vscode/popycast/ illz@serverbook:/srv/storage/Projects/dubtab/
 
 # Шаг 2: Serverbook → VPS
 ssh illz@serverbook "rsync -avz \
   --exclude '.git' --exclude 'node_modules' --exclude 'frontend/dist' \
   --exclude 'data' --exclude '__pycache__' \
   -e 'ssh -p 2202 -i ~/.ssh/id_rsa_aeza -o StrictHostKeyChecking=no' \
-  /srv/storage/Projects/claytablet/ admin@109.120.134.188:/opt/claytablet/"
+  /srv/storage/Projects/dubtab/ admin@109.120.134.188:/opt/dubtab/"
 
 # Шаг 3: Пересобрать на VPS
 ssh illz@serverbook "ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 \
-  'cd /opt/claytablet && sudo docker compose up -d --build'"
+  'cd /opt/dubtab && sudo docker compose up -d --build'"
 
 # === Docker context (альтернатива из Serverbook) ===
-# docker context use claytablet   # переключиться на VPS
-# docker compose -f /opt/claytablet/docker-compose.yml ps
+# docker context use dubtab   # переключиться на VPS
+# docker compose -f /opt/dubtab/docker-compose.yml ps
 
 # === Диагностика ===
 ssh illz@serverbook "ssh -p 2202 -i ~/.ssh/id_rsa_aeza admin@109.120.134.188 \
-  'cd /opt/claytablet && sudo docker compose logs --tail=30'"
+  'cd /opt/dubtab && sudo docker compose logs --tail=30'"
 
 # Health check
 curl http://109.120.134.188:8555/api/health
@@ -217,7 +232,31 @@ curl http://109.120.134.188:8555/api/health
 
 ## Changelog
 
-### v0.2.1 (2026-05-07) — в тестировании
+### v0.3.0 (2026-05-11) — Ребрендинг DubTab
+- 🎨 **Ребрендинг ClayTablet → DubTab**: новое имя, домен `dubtab.pro`, логотип (знак 𒁾 DUB)
+- 🔄 **API пути**: `/api/claytablet/` → `/api/dubtab/` во всех клиентах (frontend, desktop, CLI)
+- 🔑 **Cookie/localStorage**: `claytablet_*` → `dubtab_*` (сессии сбросятся, нужен повторный логин)
+- 🗄️ **DB**: `claytablet.db` → `dubtab.db`
+- ⌨️ **CLI**: бинарь `claytab` → `dubtab`, Go module → `github.com/Goodspoken/dubtab/cli`
+- 🌐 **Caddyfile**: `claytablet.online` теперь редиректит на `dubtab.pro`
+- ✏️ **Canvas**: undo/redo (Ctrl+Z/Y, кнопки), текстовый инструмент, шаблоны (линия, прямоугольник, круг)
+
+### v0.2.3 (2026-05-11) — в тестировании
+- 🔒 **Plugin config endpoints под авторизацией**: `GET /api/plugins` и `GET/POST /api/plugins/{id}/config` теперь требуют JWT. Опциональный whitelist через `PLUGIN_ADMINS=<user_id>,<user_id>` в env. Лимит размера POST 64 KB.
+- 🐛 **Хук `on_room_created` починен**: running loop сохраняется в `app.state.loop` при старте, sync-вызовы из threadpool используют `run_coroutine_threadsafe`. Раньше хук молча скипался при первом GET комнаты.
+- 🔒 **Sentry DSN из env**: `VITE_SENTRY_DSN` вместо хардкода. Vite инлайнит на build. Без переменной фронтовый Sentry не инициализируется (для форков).
+- 🧹 **SW cache cleanup**: записи шаров автоматически чистятся через 10 минут + ручной purge после успешной отправки.
+- 🧹 **Рефакторинг auth-логики**: `_check_room_access` + `_extract_bearer_token` — устранено дублирование между HTTP и WebSocket путями.
+- 🧹 **Сплит main.py 976 → 834**: вынесены `constants.py`, `schemas.py`, `system_rooms.py`, `lan_qr.py`.
+- 🐛 **Утечка blob-URL в SharePage**: превью изображений теперь корректно вызывают `URL.revokeObjectURL` при размонтировании.
+- 🐛 **Lint SharePage**: исправлен `set-state-in-effect` через async IIFE с cancel-флагом.
+- 🐛 **Битая ссылка PLUGIN_API.md** в PluginsPanel: ведёт на GitHub.
+
+### v0.2.2 (2026-05-11)
+- ✅ **PWA Share Target**: DubTab появляется в системном меню «Поделиться» на Android/iOS. Service Worker перехватывает системный POST, файлы временно хранятся в Cache API. Страница `/share` — превью контента + список последних комнат одним тапом. Поддержка: фото, аудио, файлы, текст, ссылки.
+- ✅ **Plugin Engine**: движок плагинов без изоляции (`plugin_manager.py` + `plugin_sdk.py`). Хуки событий, cron-расписание (APScheduler), HTTP-эндпоинты плагинов, CRUD конфига. CLI-команды `dubtab plugin list/config/call`. TUI-режим плагинов (`p`). Секция «Плагины» в веб-Settings.
+
+### v0.2.1 (2026-05-07) — задеплоено
 - ✅ **Реактивный язык**: `useI18n` переписан на `useSyncExternalStore` — переключение языка мгновенно работает во всех компонентах одновременно.
 - ✅ **Реактивная тема**: новый `useTheme` hook с тем же паттерном — тёмная/светлая/системная тема синхронизируется глобально. Учитывает `prefers-color-scheme` в реальном времени.
 - ✅ **Шестерёнка в Settings**: иконка `Settings` (gear) вместо `Settings2`.
@@ -232,7 +271,7 @@ curl http://109.120.134.188:8555/api/health
 - ✅ **Десктоп-приложение (Tauri v2)**: нативный клиент под Windows / Linux / macOS (Apple Silicon). Системный трей, Quick Paste (`Ctrl+Shift+V`), отправка буфера (`Ctrl+Shift+C`), тёмная тема, RU/EN.
 - ✅ **Auto-updater**: встроенная проверка и установка обновлений прямо из Settings, прогресс-бар загрузки, кнопка «Перезапустить».
 - ✅ **GitHub CI/CD**: матричная сборка (Windows / Ubuntu / macOS) через `tauri-apps/tauri-action`, подпись релизов (minisign), автопубликация на GitHub Releases.
-- ✅ **GitHub репозиторий**: проект открыт на https://github.com/Goodspoken/claytablet, CI (backend + frontend + desktop), CONTRIBUTING.md.
+- ✅ **GitHub репозиторий**: проект открыт на https://github.com/Goodspoken/dubtab, CI (backend + frontend + desktop), CONTRIBUTING.md.
 - ✅ **Фикс Offline**: capabilities.json теперь включает все разрешения плагинов — исправлен главный баг десктопа.
 
 ### v0.1.x → Старая внутренняя нумерация (2026-04-15 — 2026-05-06)
@@ -245,14 +284,14 @@ curl http://109.120.134.188:8555/api/health
 - ✅ **README.md**: переписан — фичи, CLI шпаргалка, tech stack таблица.
 - ✅ **CI**: GitHub Actions — 3 параллельных джоба: backend (ruff + pytest), frontend (eslint + build), cli (go build).
 - ✅ **CLI**: новые команды `ls`, `copy/cp`, `show`, `rm`, `clear`, `new`, `me`, `logout`. Групповой help.
-- ✅ **Миграция VPS**: деплой переехал с `/opt/clipboard/` на `/opt/claytablet/`. Docker context `claytablet` создан на Serverbook.
+- ✅ **Миграция VPS**: деплой переехал с `/opt/clipboard/` на `/opt/dubtab/`. Docker context `dubtab` создан на Serverbook.
 
 ### v2.3.0 (2026-04-26)
 - ✅ **Фикс тестов**: 20/20 pytest тестов проходят. Добавлен `conftest.py` + `engine.dispose()` для правильной изоляции SQLite в тестах.
 - ✅ **Безопасная генерация Room ID**: `HomePage.tsx` использовал `Math.random()` — заменён на `crypto.randomUUID()` из `helpers.ts`.
 - ✅ **Первый деплой на VPS**: Docker-образы собраны, контейнеры запущены на `109.120.134.188`. Backend health: OK.
 - ✅ **Документация**: Обновлен `deploy_vps_prompt.md` (правильный SSH-ключ, домен). Создан `user_to_do.md`. Обновлены треки и паспорт.
-- ⏳ **Ожидание**: DNS `claytablet.online` и `claytablet.ru` должны быть направлены на `109.120.134.188` — тогда Caddy автоматически получит SSL.
+- ⏳ **Ожидание**: DNS `dubtab.app` и `dubtab.ru` должны быть направлены на `109.120.134.188` — тогда Caddy автоматически получит SSL.
 
 ### v2.2.0 (2026-04-22)
 - ✅ **Стабильность & Безопасность**: Устранен баг с 413 ошибкой (Payload Too Large), исправлена утечка WS-соединений к базе данных, внедрен Rate Limiter против brute-force атак на пароли, CORS-домены строго ограничены.

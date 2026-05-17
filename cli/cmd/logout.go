@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zalando/go-keyring"
 )
 
 var logoutCmd = &cobra.Command{
@@ -13,16 +14,17 @@ var logoutCmd = &cobra.Command{
 	Short: "Выйти из аккаунта (удалить токен)",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	RunE: func(cmd *cobra.Command, args []string) error {
-		token := viper.GetString("token")
-		if token == "" {
+		token, err := keyring.Get("dubtab", "token")
+		if err != nil && viper.GetString("token") == "" {
 			fmt.Println("Ты и так не авторизован.")
 			return nil
 		}
 
+		keyring.Delete("dubtab", "token")
 		viper.Set("token", "")
 		if err := viper.WriteConfig(); err != nil {
 			home, _ := os.UserHomeDir()
-			viper.WriteConfigAs(home + "/.config/claytablet.toml")
+			viper.WriteConfigAs(home + "/.config/dubtab.toml")
 		}
 
 		fmt.Println("✓ Токен удалён. До свидания!")

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"time"
@@ -11,8 +12,8 @@ import (
 var watchCmd = &cobra.Command{
 	Use:   "watch",
 	Short: "Следить за комнатой в реальном времени (WebSocket)",
-	Example: `  claytab watch              # только новые записи
-  claytab watch --all        # показать всё + слушать новое`,
+	Example: `  dubtab watch              # только новые записи
+  dubtab watch --all        # показать всё + слушать новое`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		showAll, _ := cmd.Flags().GetBool("all")
 
@@ -21,7 +22,7 @@ var watchCmd = &cobra.Command{
 
 		// Загружаем начальное состояние, запоминаем уже существующие ID
 		seenIDs := make(map[string]bool)
-		data, err := client.GetRoom()
+		data, err := client.GetRoom(cmd.Context())
 		if err != nil {
 			return fmt.Errorf("не удалось загрузить комнату: %w", err)
 		}
@@ -56,8 +57,8 @@ var watchCmd = &cobra.Command{
 		}
 
 		// Слушаем WebSocket, выводим только новые элементы
-		return client.Watch(func() {
-			data, err := client.GetRoom()
+		return client.Watch(cmd.Context(), func() {
+			data, err := client.GetRoom(context.Background())
 			if err != nil {
 				fmt.Printf("[%s] ошибка: %v\n", timestamp(), err)
 				return

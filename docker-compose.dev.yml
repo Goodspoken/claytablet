@@ -8,7 +8,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: claytablet-backend-dev
+    container_name: dubtab-backend-dev
     restart: unless-stopped
     ports:
       - "8555:8000"
@@ -26,7 +26,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: claytablet-frontend-dev
+    container_name: dubtab-frontend-dev
     restart: unless-stopped
     ports:
       - "8505:8080"

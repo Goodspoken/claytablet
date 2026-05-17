@@ -1,0 +1,9 @@
+{
+  "id": "rss-fetcher",
+  "name": "RSS Auto-Post",
+  "version": "1.0.0",
+  "author": "ClayTablet Team",
+  "description": "Автоматически постит новые записи из RSS/Atom-лент в комнаты ClayTablet.",
+  "hooks": ["on_startup", "scheduled", "http_get"],
+  "min_claytablet_version": "0.3.0"
+}

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="500" height="500">
+  <!-- Transparent background -->
+  <rect width="500" height="500" fill="transparent"/>
+
+  <g fill="#2d1a4a" transform="translate(60, 60)">
+
+    <!-- Three wedge marks on the left (pointing right) -->
+    <!-- Wedge top -->
+    <polygon points="0,30  70,60  0,90"/>
+    <!-- Wedge middle -->
+    <polygon points="0,120  70,150  0,180"/>
+    <!-- Wedge bottom -->
+    <polygon points="0,215  70,245  0,275"/>
+
+    <!-- Main rectangle outline (DUB frame) — drawn as filled rects for thickness -->
+    <!-- Top bar -->
+    <rect x="90" y="0" width="290" height="22"/>
+    <!-- Bottom bar -->
+    <rect x="90" y="358" width="290" height="22"/>
+    <!-- Left side -->
+    <rect x="90" y="0" width="22" height="380"/>
+    <!-- Right side -->
+    <rect x="358" y="0" width="22" height="380"/>
+
+    <!-- Horizontal divider at ~40% -->
+    <rect x="90" y="148" width="290" height="18"/>
+
+    <!-- Second horizontal divider at ~70% -->
+    <rect x="90" y="258" width="290" height="18"/>
+
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-# ClayTablet Plugin API
+# DubTab Plugin API
 
 ## Установка плагина
 
@@ -27,14 +27,14 @@ plugins/
   "author": "your-name",
   "description": "Что делает плагин",
   "hooks": ["on_startup", "on_text_added"],
-  "min_claytablet_version": "0.2.1"
+  "min_dubtab_version": "0.2.1"
 }
 ```
 
 ## plugin.py — пример
 
 ```python
-from claytablet_sdk import hook, scheduled, http, api
+from dubtab_sdk import hook, scheduled, http, api
 
 @hook("on_startup")
 async def init():

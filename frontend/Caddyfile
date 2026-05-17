@@ -1,8 +1,8 @@
-claytablet.ru {
-    redir https://claytablet.online{uri}
+claytablet.online, www.claytablet.online {
+    redir https://dubtab.pro{uri}
 }
 
-claytablet.online {
+dubtab.pro, www.dubtab.pro {
     encode zstd gzip
 
     # Раздача медиафайлов напрямую с диска (быстрее, чем через Python)

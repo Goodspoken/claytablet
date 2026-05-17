@@ -1,5 +1,5 @@
 """
-ClayTablet Plugin Manager
+DubTab Plugin Manager
 
 Scans the plugins/ directory on startup, loads each plugin.py module,
 registers hooks/schedules/routes, and fires hooks at runtime.
@@ -13,10 +13,12 @@ import sys
 from pathlib import Path
 from typing import Any, Callable
 
-from fastapi import APIRouter, Request
+import os
+
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-logger = logging.getLogger("claytablet.plugins")
+logger = logging.getLogger("dubtab.plugins")
 
 
 class PluginManager:
@@ -84,7 +86,7 @@ class PluginManager:
             plugin_sdk._set_context(self, plugin_id)
 
             spec = importlib.util.spec_from_file_location(
-                f"claytablet_plugin_{plugin_id}", plugin_path
+                f"dubtab_plugin_{plugin_id}", plugin_path
             )
             mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
             spec.loader.exec_module(mod)  # type: ignore[union-attr]
@@ -179,12 +181,32 @@ class PluginManager:
         """Build and return an APIRouter mounting all plugin HTTP routes.
 
         Routes are mounted at /api/plugins/{plugin_id}/{path}.
+        Admin endpoints (list, config) require an authenticated user; if
+        PLUGIN_ADMINS env var is set, only those user IDs are allowed.
         """
         router = APIRouter(prefix="/api/plugins")
 
-        # List all installed plugins
+        def _require_admin(request: Request) -> str:
+            """Ensure caller is authenticated and (if PLUGIN_ADMINS set) is an admin."""
+            from auth import get_current_user_id_sync
+            token = request.cookies.get("dubtab_token")
+            auth_header = request.headers.get("Authorization", "")
+            if auth_header.startswith("Bearer "):
+                token = auth_header.split(" ", 1)[1]
+            user_id = get_current_user_id_sync(token) if token else None
+            if not user_id:
+                raise HTTPException(status_code=401, detail="auth_required")
+            admins_raw = os.getenv("PLUGIN_ADMINS", "").strip()
+            if admins_raw:
+                allowed = {a.strip() for a in admins_raw.split(",") if a.strip()}
+                if user_id not in allowed:
+                    raise HTTPException(status_code=403, detail="admin_required")
+            return user_id
+
+        # List all installed plugins (auth required — leaks installed module names)
         @router.get("")
-        async def list_plugins():
+        async def list_plugins(request: Request):
+            _require_admin(request)
             return [
                 {
                     "id": p.get("id"),
@@ -199,7 +221,8 @@ class PluginManager:
 
         # Plugin config read/write
         @router.get("/{plugin_id}/config")
-        async def get_plugin_config(plugin_id: str):
+        async def get_plugin_config(plugin_id: str, request: Request):
+            _require_admin(request)
             plugin_meta = next((p for p in self._plugins if p.get("id") == plugin_id), None)
             if not plugin_meta:
                 return JSONResponse({"error": "plugin not found"}, status_code=404)
@@ -213,11 +236,15 @@ class PluginManager:
 
         @router.post("/{plugin_id}/config")
         async def set_plugin_config(plugin_id: str, request: Request):
+            _require_admin(request)
             plugin_meta = next((p for p in self._plugins if p.get("id") == plugin_id), None)
             if not plugin_meta:
                 return JSONResponse({"error": "plugin not found"}, status_code=404)
+            raw = await request.body()
+            if len(raw) > 64 * 1024:
+                raise HTTPException(status_code=413, detail="config too large (max 64 KB)")
             try:
-                body = await request.json()
+                body = json.loads(raw)
             except Exception:
                 return JSONResponse({"error": "invalid JSON"}, status_code=400)
             cfg_path = Path(plugin_meta["_dir"]) / "config.json"

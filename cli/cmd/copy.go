@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os/exec"
 	"strings"
 
+	"github.com/atotto/clipboard"
 	"github.com/spf13/cobra"
 )
 
@@ -12,13 +12,13 @@ var copyCmd = &cobra.Command{
 	Use:     "copy [номер или id]",
 	Aliases: []string{"cp"},
 	Short:   "Скопировать текст в буфер обмена",
-	Example: `  claytab copy          # последняя запись
-  claytab copy 10       # запись №10 из ls
-  claytab copy a1b2c3   # по префиксу ID
-  claytab copy --last 2 # вторая с конца`,
+	Example: `  dubtab copy          # последняя запись
+  dubtab copy 10       # запись №10 из ls
+  dubtab copy a1b2c3   # по префиксу ID
+  dubtab copy --last 2 # вторая с конца`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		data, err := client.GetRoom()
+		data, err := client.GetRoom(cmd.Context())
 		if err != nil {
 			return err
 		}
@@ -50,7 +50,7 @@ var copyCmd = &cobra.Command{
 		}
 
 		if err := CopyToClipboard(text); err != nil {
-			return fmt.Errorf("не удалось скопировать: %w\n  Попробуй: claytab show <номер>", err)
+			return fmt.Errorf("не удалось скопировать: %w\n  Попробуй: dubtab show <номер>", err)
 		}
 
 		preview := strings.ReplaceAll(text, "\n", "↵ ")
@@ -63,27 +63,7 @@ var copyCmd = &cobra.Command{
 }
 
 func CopyToClipboard(text string) error {
-	if path, err := exec.LookPath("wl-copy"); err == nil {
-		cmd := exec.Command(path)
-		cmd.Stdin = strings.NewReader(text)
-		return cmd.Run()
-	}
-	if path, err := exec.LookPath("xclip"); err == nil {
-		cmd := exec.Command(path, "-selection", "clipboard")
-		cmd.Stdin = strings.NewReader(text)
-		return cmd.Run()
-	}
-	if path, err := exec.LookPath("xsel"); err == nil {
-		cmd := exec.Command(path, "--clipboard", "--input")
-		cmd.Stdin = strings.NewReader(text)
-		return cmd.Run()
-	}
-	if path, err := exec.LookPath("pbcopy"); err == nil {
-		cmd := exec.Command(path)
-		cmd.Stdin = strings.NewReader(text)
-		return cmd.Run()
-	}
-	return fmt.Errorf("не найдено wl-copy / xclip / xsel / pbcopy")
+	return clipboard.WriteAll(text)
 }
 
 func init() {

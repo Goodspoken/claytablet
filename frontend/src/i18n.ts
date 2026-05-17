@@ -88,9 +88,18 @@ export const translations = {
     selectColor: 'Выбрать цвет',
     brush: 'Кисть',
     eraser: 'Ластик',
+    textTool: 'Текст',
+    lineTool: 'Линия',
+    rectTool: 'Прямоугольник',
+    circleTool: 'Круг/Эллипс',
     clearCanvas: 'Очистить',
     lineWidth: 'Толщина',
+    fontSize: 'Размер',
     saveDrawing: 'Сохранить',
+    undo: 'Отменить',
+    redo: 'Повторить',
+    clickToAddText: 'Нажмите на холст, чтобы добавить текст',
+    dragToDrawShape: 'Зажмите и тяните для рисования фигуры',
 
     // Cards
     boardEmpty: 'Доска пуста',
@@ -130,6 +139,7 @@ export const translations = {
     readOnlyToggle: 'Режим «только чтение»',
     readOnlyToggleDesc: 'Гости смогут просматривать доску, но не смогут добавлять или удалять записи.',
     readOnlyError: 'Доска в режиме «только чтение»',
+    loading: 'Загрузка...',
   },
   EN: {
     // Header
@@ -218,9 +228,18 @@ export const translations = {
     selectColor: 'Select color',
     brush: 'Brush',
     eraser: 'Eraser',
+    textTool: 'Text',
+    lineTool: 'Line',
+    rectTool: 'Rectangle',
+    circleTool: 'Circle/Ellipse',
     clearCanvas: 'Clear',
     lineWidth: 'Size',
+    fontSize: 'Size',
     saveDrawing: 'Save',
+    undo: 'Undo',
+    redo: 'Redo',
+    clickToAddText: 'Click on canvas to add text',
+    dragToDrawShape: 'Drag to draw shape',
 
     // Cards
     boardEmpty: 'Board is empty',
@@ -260,5 +279,6 @@ export const translations = {
     readOnlyToggle: 'Read-only mode',
     readOnlyToggleDesc: 'Guests can view the board but cannot add or delete items.',
     readOnlyError: 'Board is in read-only mode',
+    loading: 'Loading...',
   }
 };

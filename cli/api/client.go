@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -51,7 +52,17 @@ type RoomData struct {
 	Chats  []Item `json:"chats"`
 }
 
-func (c *Client) newRequest(method, path string, body any) (*http.Request, error) {
+// PluginInfo describes an installed plugin
+type PluginInfo struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	Author      string `json:"author"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+}
+
+func (c *Client) newRequest(ctx context.Context, method, path string, body any) (*http.Request, error) {
 	var bodyReader io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -61,7 +72,7 @@ func (c *Client) newRequest(method, path string, body any) (*http.Request, error
 		bodyReader = bytes.NewReader(b)
 	}
 
-	req, err := http.NewRequest(method, c.BaseURL+path, bodyReader)
+	req, err := http.NewRequestWithContext(ctx, method, c.BaseURL+path, bodyReader)
 	if err != nil {
 		return nil, err
 	}
@@ -104,8 +115,8 @@ func (c *Client) do(req *http.Request, out any) error {
 }
 
 // GetRoom возвращает все элементы комнаты
-func (c *Client) GetRoom() (*RoomData, error) {
-	req, err := c.newRequest("GET", "/api/claytablet/"+c.Room, nil)
+func (c *Client) GetRoom(ctx context.Context) (*RoomData, error) {
+	req, err := c.newRequest(ctx, "GET", "/api/dubtab/"+c.Room, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -114,8 +125,8 @@ func (c *Client) GetRoom() (*RoomData, error) {
 }
 
 // SendText отправляет текст в комнату
-func (c *Client) SendText(content string) (*Item, error) {
-	req, err := c.newRequest("POST", "/api/claytablet/"+c.Room+"/text",
+func (c *Client) SendText(ctx context.Context, content string) (*Item, error) {
+	req, err := c.newRequest(ctx, "POST", "/api/dubtab/"+c.Room+"/text",
 		map[string]string{"content": content})
 	if err != nil {
 		return nil, err
@@ -125,8 +136,8 @@ func (c *Client) SendText(content string) (*Item, error) {
 }
 
 // DeleteItem удаляет элемент по ID
-func (c *Client) DeleteItem(itemID string) error {
-	req, err := c.newRequest("DELETE", "/api/claytablet/"+c.Room+"/"+itemID, nil)
+func (c *Client) DeleteItem(ctx context.Context, itemID string) error {
+	req, err := c.newRequest(ctx, "DELETE", "/api/dubtab/"+c.Room+"/"+itemID, nil)
 	if err != nil {
 		return err
 	}
@@ -134,16 +145,68 @@ func (c *Client) DeleteItem(itemID string) error {
 }
 
 // ClearRoom удаляет все элементы комнаты
-func (c *Client) ClearRoom() error {
-	req, err := c.newRequest("DELETE", "/api/claytablet/"+c.Room+"/all", nil)
+func (c *Client) ClearRoom(ctx context.Context) error {
+	req, err := c.newRequest(ctx, "DELETE", "/api/dubtab/"+c.Room+"/all", nil)
 	if err != nil {
 		return err
 	}
 	return c.do(req, nil)
 }
 
+// --- Plugin API ---
+
+// ListPlugins возвращает список установленных плагинов
+func (c *Client) ListPlugins(ctx context.Context) ([]PluginInfo, error) {
+	req, err := c.newRequest(ctx, "GET", "/api/plugins", nil)
+	if err != nil {
+		return nil, err
+	}
+	var plugins []PluginInfo
+	return plugins, c.do(req, &plugins)
+}
+
+// GetPluginConfig возвращает конфиг плагина как raw JSON
+func (c *Client) GetPluginConfig(ctx context.Context, pluginID string) (json.RawMessage, error) {
+	req, err := c.newRequest(ctx, "GET", "/api/plugins/"+pluginID+"/config", nil)
+	if err != nil {
+		return nil, err
+	}
+	var raw json.RawMessage
+	return raw, c.do(req, &raw)
+}
+
+// SetPluginConfig сохраняет конфиг плагина из raw JSON
+func (c *Client) SetPluginConfig(ctx context.Context, pluginID string, raw json.RawMessage) error {
+	var body any
+	if err := json.Unmarshal(raw, &body); err != nil {
+		return fmt.Errorf("невалидный JSON: %w", err)
+	}
+	req, err := c.newRequest(ctx, "POST", "/api/plugins/"+pluginID+"/config", body)
+	if err != nil {
+		return err
+	}
+	return c.do(req, nil)
+}
+
+// CallPlugin вызывает произвольный HTTP-эндпоинт плагина
+func (c *Client) CallPlugin(ctx context.Context, pluginID, path, method string, body json.RawMessage) (json.RawMessage, error) {
+	fullPath := "/api/plugins/" + pluginID + "/" + strings.TrimLeft(path, "/")
+	var reqBody any
+	if len(body) > 0 {
+		if err := json.Unmarshal(body, &reqBody); err != nil {
+			return nil, fmt.Errorf("невалидный JSON body: %w", err)
+		}
+	}
+	req, err := c.newRequest(ctx, strings.ToUpper(method), fullPath, reqBody)
+	if err != nil {
+		return nil, err
+	}
+	var result json.RawMessage
+	return result, c.do(req, &result)
+}
+
 // Watch подключается по WebSocket и вызывает callback при каждом обновлении
-func (c *Client) Watch(onUpdate func()) error {
+func (c *Client) Watch(ctx context.Context, onUpdate func()) error {
 	u, err := url.Parse(c.BaseURL)
 	if err != nil {
 		return err
@@ -160,13 +223,18 @@ func (c *Client) Watch(onUpdate func()) error {
 	}
 
 	headers := http.Header{}
-	conn, _, err := websocket.DefaultDialer.Dial(wsURL, headers)
+	conn, _, err := websocket.DefaultDialer.DialContext(ctx, wsURL, headers)
 	if err != nil {
 		return fmt.Errorf("WebSocket ошибка: %w", err)
 	}
 	defer conn.Close()
 
-	// Ping/pong keepalive
+	// Горутина для закрытия вебсокета при отмене контекста
+	go func() {
+		<-ctx.Done()
+		conn.Close()
+	}()
+
 	conn.SetPingHandler(func(data string) error {
 		return conn.WriteMessage(websocket.PongMessage, []byte(data))
 	})

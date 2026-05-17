@@ -10,6 +10,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zalando/go-keyring"
 )
 
 var loginCmd = &cobra.Command{
@@ -20,7 +21,7 @@ var loginCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		server := viper.GetString("server")
 		if server == "" {
-			server = "https://claytablet.online"
+			server = "https://dubtab.app"
 		}
 
 		provider, _ := cmd.Flags().GetString("provider")
@@ -58,15 +59,17 @@ var loginCmd = &cobra.Command{
 			return fmt.Errorf("токен не введён")
 		}
 
-		viper.Set("token", token)
+		keyring.Set("dubtab", "token", token)
+		viper.Set("token", "") // Убираем из открытого текста
+
 		if err := viper.WriteConfig(); err != nil {
 			// Если конфига ещё нет, создаём
 			home, _ := os.UserHomeDir()
-			viper.WriteConfigAs(home + "/.config/claytablet.toml")
+			viper.WriteConfigAs(home + "/.config/dubtab.toml")
 		}
 
-		fmt.Printf("\n✓ Токен сохранён в конфиге\n")
-		fmt.Println("Теперь можешь смотреть свои комнаты: claytab rooms")
+		fmt.Printf("\n✓ Токен безопасно сохранён (Keychain)\n")
+		fmt.Println("Теперь можешь смотреть свои комнаты: dubtab rooms")
 		return nil
 	},
 }

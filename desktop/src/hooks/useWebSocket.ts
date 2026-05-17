@@ -37,7 +37,7 @@ export function useWebSocket({ roomId, onSync }: UseWebSocketOptions) {
       const wsBase = base.replace(/^https:/, 'wss:').replace(/^http:/, 'ws:');
       wsUrl = `${wsBase}/api/ws/rooms/${roomId}`;
     } else {
-      wsUrl = `wss://claytablet.online/api/ws/rooms/${roomId}`;
+      wsUrl = `wss://dubtab.app/api/ws/rooms/${roomId}`;
     }
 
     const ws = new WebSocket(wsUrl);

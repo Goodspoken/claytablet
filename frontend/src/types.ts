@@ -43,3 +43,12 @@ export interface SystemRoom {
 }
 
 export type ToastType = 'success' | 'error' | 'info';
+
+export interface PluginInfo {
+  id: string;
+  name: string;
+  version: string;
+  author: string;
+  description: string;
+  status: string;
+}

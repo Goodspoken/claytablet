@@ -1,8 +1,8 @@
 [package]
 name = "desktop"
 version = "0.1.0"
-description = "ClayTablet Desktop App"
-authors = ["ClayTablet"]
+description = "DubTab Desktop App"
+authors = ["DubTab"]
 edition = "2021"
 
 [lib]

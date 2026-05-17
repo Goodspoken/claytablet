@@ -4,7 +4,7 @@
 
 ## Проект
 
-ClayTablet (внутреннее имя: PopyCast/popycast) — обмен буфером обмена между устройствами в реальном времени. Изолированные «комнаты» по короткому URL, синхронизация через WebSocket. Поддержка текста, изображений, аудио (MediaRecorder), файлов, рисунков на канвасе и чата. Self-hosted через Docker.
+DubTab (внутреннее имя: PopyCast/popycast) — обмен буфером обмена между устройствами в реальном времени. Изолированные «комнаты» по короткому URL, синхронизация через WebSocket. Поддержка текста, изображений, аудио (MediaRecorder), файлов, рисунков на канвасе и чата. Self-hosted через Docker.
 
 `PROJECT_PASSPORT.md` (на русском) — живой статус-документ: IP серверов, текущее состояние деплоя, changelog. Читай его перед нетривиальной работой. `GEMINI.md` — более старый обзор, оставлен для справки.
 
@@ -40,14 +40,14 @@ docker compose logs --tail=30              # диагностика
 ## Архитектура
 
 ### Трёхзвенный поток
-1. **Caddy** ([frontend/Caddyfile](frontend/Caddyfile)) терминирует HTTPS для `claytablet.online` (Let's Encrypt автосертификат), отдаёт React SPA и проксирует `/api/*` на `backend:8000`. `claytablet.ru` редиректит на `.online`.
-2. **FastAPI бэкенд** ([backend/main.py](backend/main.py)) предоставляет REST + WebSocket по `/api/claytablet/{room_id}/...`. SQLite через SQLAlchemy для персистентности; in-memory `dict[str, list[WebSocket]]` для живых соединений.
+1. **Caddy** ([frontend/Caddyfile](frontend/Caddyfile)) терминирует HTTPS для `dubtab.app` (Let's Encrypt автосертификат), отдаёт React SPA и проксирует `/api/*` на `backend:8000`. `dubtab.ru` редиректит на `.online`.
+2. **FastAPI бэкенд** ([backend/main.py](backend/main.py)) предоставляет REST + WebSocket по `/api/dubtab/{room_id}/...`. SQLite через SQLAlchemy для персистентности; in-memory `dict[str, list[WebSocket]]` для живых соединений.
 3. **React SPA** маршрутизирует `/:roomId` на страницу `Board`; `HomePage` генерирует ID новых комнат через `crypto.randomUUID()`.
 
 ### Особенности бэкенда
-- **БД** ([backend/database.py](backend/database.py), [backend/models.py](backend/models.py)): SQLite по пути `${DATA_DIR}/claytablet.db` (DATA_DIR по умолчанию `/app/data`, в тестах переопределяется через `conftest.py`). Три таблицы: `User`, `Room` (с опциональными `owner_id`, `password_hash`, `ttl`, `layout_order`), `Item` (полиморфная по `item_type`: text/image/audio/file/chat).
+- **БД** ([backend/database.py](backend/database.py), [backend/models.py](backend/models.py)): SQLite по пути `${DATA_DIR}/dubtab.db` (DATA_DIR по умолчанию `/app/data`, в тестах переопределяется через `conftest.py`). Три таблицы: `User`, `Room` (с опциональными `owner_id`, `password_hash`, `ttl`, `layout_order`), `Item` (полиморфная по `item_type`: text/image/audio/file/chat).
 - **Миграции** ([backend/alembic/](backend/alembic/)): на старте `_init_database()` сначала делает `create_all()`, потом `alembic upgrade head`. Новые миграции — в `alembic/versions/`.
-- **Авторизация** ([backend/auth.py](backend/auth.py)): опциональный OAuth Google/Yandex через `fastapi-sso`. Выдаёт JWT (HS256, срок 30 дней) в куку `claytablet_token` либо через `Authorization: Bearer`. Комнаты с `owner_id` — личные, доступны только владельцу.
+- **Авторизация** ([backend/auth.py](backend/auth.py)): опциональный OAuth Google/Yandex через `fastapi-sso`. Выдаёт JWT (HS256, срок 30 дней) в куку `dubtab_token` либо через `Authorization: Bearer`. Комнаты с `owner_id` — личные, доступны только владельцу.
 - **Доступ к комнате** контролируется зависимостью `verify_room_access`: сначала проверка владельца → потом bcrypt-проверка пароля (заголовок `X-Room-Password` или query `?password=`). Rate-limit: 10 попыток/мин/IP через in-memory словарь.
 - **WebSocket** на `/api/ws/rooms/{room_id}`: клиенты шлют произвольный текст, который рассылается остальным пирам в комнате (сам сервер только инжектит `"sync"` после записей через `broadcast_sync`). Heartbeat `ping`/`pong`; максимум 50 соединений на комнату. Авторизация использует короткоживущую DB-сессию — **не держи** `Depends(get_db)` на всё время жизни WS.
 - **TTL-очистка** запускается каждые 5 мин в фоновой задаче; `ttl="forever"` (дефолт для личных комнат) исключён. У устаревших комнат сначала удаляются медиафайлы с диска, затем строка из БД (cascade чистит `Item`).
@@ -77,7 +77,7 @@ docker compose logs --tail=30              # диагностика
 - Используй безопасный `generateId` из [frontend/src/helpers.ts](frontend/src/helpers.ts) (обёртка вокруг `crypto.randomUUID()`); никогда `Math.random()` для ID.
 - Бэкенд весь async/await; блокирующую работу внутри эндпоинтов нужно выносить в thread pool (это был фикс v2.2.0).
 - `room_id` обязан матчиться по `^[a-zA-Z0-9_-]{2,32}$` (обеспечивается на сервере через `Path(..., pattern=ROOM_ID_REGEX)`).
-- Внутренняя директория — `popycast/` и многие старые доки/комменты называют проект так. Пользователь видит **ClayTablet** — префикс API-путей: `/api/claytablet/...`.
+- Внутренняя директория — `popycast/` и многие старые доки/комменты называют проект так. Пользователь видит **DubTab** — префикс API-путей: `/api/dubtab/...`.
 
 ## Деплой
 

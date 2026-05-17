@@ -20,7 +20,7 @@ var meCmd = &cobra.Command{
 		token := viper.GetString("token")
 
 		if token == "" {
-			fmt.Println("Не авторизован. Войди через: claytab login")
+			fmt.Println("Не авторизован. Войди через: dubtab login")
 			return nil
 		}
 
@@ -38,7 +38,7 @@ var meCmd = &cobra.Command{
 		defer resp.Body.Close()
 
 		if resp.StatusCode == 401 {
-			fmt.Println("Токен устарел. Войди заново: claytab login")
+			fmt.Println("Токен устарел. Войди заново: dubtab login")
 			return nil
 		}
 		if resp.StatusCode != 200 {

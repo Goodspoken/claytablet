@@ -7,13 +7,14 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zalando/go-keyring"
 )
 
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Сохранить настройки (сервер, комната, пароль)",
-	Example: `  claytablet config --server https://claytablet.online --room my-room
-  claytablet config --server http://localhost:8080 --room test`,
+	Example: `  dubtab config --server https://dubtab.app --room my-room
+  dubtab config --server http://localhost:8080 --room test`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if s, _ := cmd.Flags().GetString("server"); s != "" {
 			viper.Set("server", s)
@@ -22,17 +23,19 @@ var configCmd = &cobra.Command{
 			viper.Set("room", r)
 		}
 		if p, _ := cmd.Flags().GetString("password"); p != "" {
-			viper.Set("password", p)
+			keyring.Set("dubtab", "password", p)
+			viper.Set("password", "") // Убираем из открытого текста
 		}
 		if t, _ := cmd.Flags().GetString("token"); t != "" {
-			viper.Set("token", t)
+			keyring.Set("dubtab", "token", t)
+			viper.Set("token", "") // Убираем из открытого текста
 		}
 
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return err
 		}
-		cfgPath := filepath.Join(home, ".config", "claytablet.toml")
+		cfgPath := filepath.Join(home, ".config", "dubtab.toml")
 		os.MkdirAll(filepath.Dir(cfgPath), 0755)
 
 		if err := viper.WriteConfigAs(cfgPath); err != nil {

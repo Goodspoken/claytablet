@@ -1,6 +1,6 @@
 package main
 
-import "github.com/claytablet/cli/cmd"
+import "github.com/Goodspoken/dubtab/cli/cmd"
 
 func main() {
 	cmd.Execute()

@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: claytablet-backend
+    container_name: dubtab-backend
     restart: unless-stopped
     ports:
       - "8555:8000"
@@ -21,7 +21,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: claytablet-frontend
+      args:
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
+    container_name: dubtab-frontend
     restart: unless-stopped
     ports:
       - "80:80"

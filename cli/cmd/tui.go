@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -9,6 +11,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/Goodspoken/dubtab/cli/api"
 	"github.com/spf13/cobra"
 )
 
@@ -71,22 +74,29 @@ const (
 	modeNormal tuiMode = iota
 	modeInput
 	modeDetail
+	modePlugins
+	modePluginConfig
 )
 
 type model struct {
-	items     []itemEntry
-	cursor    int
-	loading   bool
-	statusMsg string
-	statusOk  bool
+	items      []itemEntry
+	cursor     int
+	loading    bool
+	statusMsg  string
+	statusOk   bool
 	statusWarn bool
-	width     int
-	height    int
-	viewport  viewport.Model
-	ready     bool
-	mode      tuiMode
-	input     textinput.Model
-	detail    *itemEntry
+	width      int
+	height     int
+	viewport   viewport.Model
+	ready      bool
+	mode       tuiMode
+	input      textinput.Model
+	detail     *itemEntry
+	// plugins panel
+	plugins       []api.PluginInfo
+	pluginsCursor int
+	pluginsLoading bool
+	pluginConfig  string // pretty-printed JSON of selected plugin config
 }
 
 type dataMsg []itemEntry
@@ -94,6 +104,8 @@ type errMsg struct{ err error }
 type statusClearMsg struct{}
 type wsUpdateMsg struct{}
 type wsSendOkMsg struct{}
+type pluginsMsg []api.PluginInfo
+type pluginConfigMsg string
 
 func initialModel() model {
 	ti := textinput.New()
@@ -105,7 +117,7 @@ func initialModel() model {
 // --- Commands ---
 
 func fetchRoomData() tea.Msg {
-	data, err := client.GetRoom()
+	data, err := client.GetRoom(context.Background())
 	if err != nil {
 		return errMsg{err}
 	}
@@ -132,25 +144,43 @@ func fetchRoomData() tea.Msg {
 var wsSub chan tea.Msg
 
 func listenWebSocket(sub chan<- tea.Msg, done <-chan struct{}) {
+	backoff := time.Second
+	maxBackoff := 30 * time.Second
+
 	for {
 		select {
 		case <-done:
 			return
 		default:
 		}
-		err := client.Watch(func() {
+
+		startTime := time.Now()
+		err := client.Watch(context.Background(), func() {
 			select {
 			case sub <- wsUpdateMsg{}:
 			case <-done:
 			}
 		})
+
+		// Сбрасываем backoff, если соединение продержалось хотя бы 5 секунд
+		if time.Since(startTime) > 5*time.Second {
+			backoff = time.Second
+		}
+
 		if err != nil {
 			select {
 			case sub <- errMsg{err}:
 			case <-done:
 				return
 			}
-			time.Sleep(3 * time.Second)
+			time.Sleep(backoff)
+			backoff *= 2
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		} else {
+			// Если Watch завершился без ошибки (например, закрыли извне), ждем немного
+			time.Sleep(time.Second)
 		}
 	}
 }
@@ -162,11 +192,34 @@ func waitForWSUpdate(sub <-chan tea.Msg) tea.Cmd {
 }
 
 func sendText(text string) tea.Msg {
-	_, err := client.SendText(text)
+	_, err := client.SendText(context.Background(), text)
 	if err != nil {
 		return errMsg{err}
 	}
 	return wsSendOkMsg{}
+}
+
+func fetchPlugins() tea.Msg {
+	plugins, err := client.ListPlugins(context.Background())
+	if err != nil {
+		return errMsg{err}
+	}
+	return pluginsMsg(plugins)
+}
+
+func fetchPluginConfig(pluginID string) tea.Cmd {
+	return func() tea.Msg {
+		raw, err := client.GetPluginConfig(context.Background(), pluginID)
+		if err != nil {
+			return errMsg{err}
+		}
+		var pretty interface{}
+		if err := json.Unmarshal(raw, &pretty); err != nil {
+			return pluginConfigMsg(string(raw))
+		}
+		out, _ := json.MarshalIndent(pretty, "", "  ")
+		return pluginConfigMsg(string(out))
+	}
 }
 
 // --- TEA Interface ---
@@ -245,12 +298,29 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusClearMsg:
 		m.statusMsg = ""
 
+	case pluginsMsg:
+		m.plugins = msg
+		m.pluginsLoading = false
+		if m.pluginsCursor >= len(m.plugins) && len(m.plugins) > 0 {
+			m.pluginsCursor = len(m.plugins) - 1
+		}
+
+	case pluginConfigMsg:
+		m.pluginConfig = string(msg)
+		m.mode = modePluginConfig
+		m.viewport.SetContent(m.pluginConfig)
+		m.viewport.GotoTop()
+
 	case tea.KeyMsg:
 		switch m.mode {
 		case modeDetail:
 			cmds = append(cmds, m.handleDetailKey(msg)...)
 		case modeInput:
 			cmds = append(cmds, m.handleInputKey(msg)...)
+		case modePlugins:
+			cmds = append(cmds, m.handlePluginsKey(msg)...)
+		case modePluginConfig:
+			cmds = append(cmds, m.handlePluginConfigKey(msg)...)
 		default:
 			cmds = append(cmds, m.handleNormalKey(msg)...)
 		}
@@ -323,7 +393,7 @@ func (m *model) handleNormalKey(msg tea.KeyMsg) []tea.Cmd {
 			m.statusOk = false
 			m.statusWarn = true
 			return []tea.Cmd{func() tea.Msg {
-				if err := client.DeleteItem(id); err != nil {
+				if err := client.DeleteItem(context.Background(), id); err != nil {
 					return errMsg{err}
 				}
 				return fetchRoomData()
@@ -335,8 +405,50 @@ func (m *model) handleNormalKey(msg tea.KeyMsg) []tea.Cmd {
 		m.input.SetValue("")
 		m.input.Focus()
 		return []tea.Cmd{textinput.Blink}
+
+	case "p":
+		m.mode = modePlugins
+		m.pluginsCursor = 0
+		m.pluginsLoading = true
+		return []tea.Cmd{func() tea.Msg { return fetchPlugins() }}
 	}
 	return nil
+}
+
+func (m *model) handlePluginsKey(msg tea.KeyMsg) []tea.Cmd {
+	switch msg.String() {
+	case "esc", "q":
+		m.mode = modeNormal
+		m.updateViewport()
+	case "up", "k":
+		if m.pluginsCursor > 0 {
+			m.pluginsCursor--
+		}
+	case "down", "j":
+		if m.pluginsCursor < len(m.plugins)-1 {
+			m.pluginsCursor++
+		}
+	case "enter", "c":
+		if len(m.plugins) > 0 && m.pluginsCursor < len(m.plugins) {
+			p := m.plugins[m.pluginsCursor]
+			return []tea.Cmd{fetchPluginConfig(p.ID)}
+		}
+	case "r":
+		m.pluginsLoading = true
+		return []tea.Cmd{func() tea.Msg { return fetchPlugins() }}
+	}
+	return nil
+}
+
+func (m *model) handlePluginConfigKey(msg tea.KeyMsg) []tea.Cmd {
+	switch msg.String() {
+	case "esc", "q", "backspace":
+		m.mode = modePlugins
+		m.pluginConfig = ""
+	}
+	var vpCmd tea.Cmd
+	m.viewport, vpCmd = m.viewport.Update(msg)
+	return []tea.Cmd{vpCmd}
 }
 
 func (m *model) handleDetailKey(msg tea.KeyMsg) []tea.Cmd {
@@ -454,7 +566,7 @@ func renderKind(kind string) string {
 
 func (m model) View() string {
 	wsIndicator := styleStatusOk.Render("●")
-	header := styleHeader.Render("ClayTablet TUI") + "  " + wsIndicator +
+	header := styleHeader.Render("DubTab TUI") + "  " + wsIndicator +
 		styleDim.Render(fmt.Sprintf("  %s  (%d записей)", client.Room, len(m.items)))
 
 	var body string
@@ -470,6 +582,47 @@ func (m model) View() string {
 				renderKind(m.detail.kind) + "  " + styleDim.Render(idShort),
 			)
 			body = detailTitle + "\n" + m.viewport.View()
+		}
+
+	case modePlugins:
+		title := styleDetailHeader.Render("🔌 Плагины")
+		if m.pluginsLoading {
+			body = title + "\n" + styleDim.Render("  Загрузка...")
+		} else if len(m.plugins) == 0 {
+			body = title + "\n" + styleDim.Render("  Плагины не установлены.")
+		} else {
+			var sb strings.Builder
+			sb.WriteString(title + "\n")
+			for i, p := range m.plugins {
+				statusStyle := styleStatusOk
+				statusIcon := "✓"
+				if strings.HasPrefix(p.Status, "error") {
+					statusStyle = styleStatusErr
+					statusIcon = "✗"
+				}
+				line := fmt.Sprintf("  %s %s  %s  v%s  %s",
+					statusStyle.Render(statusIcon),
+					styleKindText.Render(p.ID),
+					p.Name,
+					styleDim.Render(p.Version),
+					styleDim.Render(p.Author),
+				)
+				if i == m.pluginsCursor {
+					line = styleCursor.Render("> ") + line[2:]
+				}
+				sb.WriteString(line + "\n")
+				if p.Description != "" {
+					sb.WriteString("     " + styleDim.Render(p.Description) + "\n")
+				}
+			}
+			body = sb.String()
+		}
+
+	case modePluginConfig:
+		if len(m.plugins) > 0 && m.pluginsCursor < len(m.plugins) {
+			p := m.plugins[m.pluginsCursor]
+			title := styleDetailHeader.Render("⚙ Конфиг: " + p.ID)
+			body = title + "\n" + m.viewport.View()
 		}
 
 	default:
@@ -489,7 +642,11 @@ func (m model) View() string {
 	case modeInput:
 		footer = styleInputPrompt.Render("Новая запись: ") + m.input.View()
 	case modeDetail:
-		footer = styleDim.Render("↑/↓: прокрутка  y/c: копировать  esc/enter: назад")
+		footer = styleDim.Render("↑/↓: прокрутка  y/c: копировать  esc: назад")
+	case modePlugins:
+		footer = styleDim.Render("↑/k ↓/j: выбор  enter/c: конфиг  r: обновить  esc: назад")
+	case modePluginConfig:
+		footer = styleDim.Render("↑/↓: прокрутка  esc: к списку плагинов")
 	default:
 		if m.statusMsg != "" {
 			if m.statusOk {
@@ -500,7 +657,7 @@ func (m model) View() string {
 				footer = styleStatusErr.Render(m.statusMsg)
 			}
 		} else {
-			footer = styleDim.Render("↑/k ↓/j: навигация  enter: просмотр  y: копировать  d: удалить  n: новая  q: выход")
+			footer = styleDim.Render("↑/k ↓/j: навигация  enter: просмотр  y: копировать  d: удалить  n: новая  p: плагины  q: выход")
 		}
 	}
 

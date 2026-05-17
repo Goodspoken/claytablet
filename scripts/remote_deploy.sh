@@ -13,7 +13,7 @@ if [ -z "$1" ]; then
 fi
 
 TARGET="$1"
-APP_NAME="claytablet"
+APP_NAME="dubtab"
 REMOTE_DIR="/opt/$APP_NAME"
 LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 

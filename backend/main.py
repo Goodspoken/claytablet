@@ -11,7 +11,6 @@ import sentry_sdk
 from fastapi import FastAPI, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect, Path, Header, Query, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field
 import bcrypt
 from typing import Optional
 
@@ -20,13 +19,27 @@ from sqlalchemy.orm import Session
 import database
 import models
 
+# Extracted modules
+from constants import (
+    ROOM_ID_REGEX, DEFAULT_ROOM_TTL_SECONDS, CLEANUP_INTERVAL_SECONDS,
+    MAX_WS_PER_ROOM, MAX_TEXTS_PER_ROOM, MAX_IMAGES_PER_ROOM, MAX_AUDIO_PER_ROOM,
+    MAX_FILES_PER_ROOM, MAX_CHATS_PER_ROOM, UPLOAD_CHUNK_SIZE,
+    TTL_PRESETS, MEDIA_DIR,
+    ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES,
+    ALLOWED_AUDIO_EXTENSIONS, ALLOWED_AUDIO_MIME_TYPES,
+    MAX_FILE_SIZE, BLOCKED_FILE_EXTENSIONS,
+)
+from schemas import TextItem, ChatItem, RoomSettings, OrderSettings, PasswordVerification
+from system_rooms import SYSTEM_ROOMS, seed_system_rooms
+from lan_qr import print_lan_qr
+
 # --- Logging ---
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger("claytablet")
+logger = logging.getLogger("dubtab")
 
 # --- Initialize Database (via Alembic migrations, fallback to create_all) ---
 def _init_database():
@@ -63,68 +76,30 @@ if _sentry_dsn:
 else:
     logger.info("SENTRY_DSN not set, skipping Sentry init")
 
-# --- Constants ---
-ROOM_ID_REGEX = r"^[a-zA-Z0-9_-]{2,32}$"
-DEFAULT_ROOM_TTL_SECONDS = 24 * 60 * 60  # 24 hours
-CLEANUP_INTERVAL_SECONDS = 5 * 60  # 5 minutes
-MAX_WS_PER_ROOM = 50
-MAX_TEXTS_PER_ROOM = 50
-MAX_IMAGES_PER_ROOM = 30
-MAX_AUDIO_PER_ROOM = 30
-MAX_FILES_PER_ROOM = 30
-MAX_CHATS_PER_ROOM = 200
-UPLOAD_CHUNK_SIZE = 64 * 1024  # 64 KB chunks for streaming uploads
-
-# --- TTL presets (seconds) ---
-TTL_PRESETS = {
-    "10m": 10 * 60,
-    "1h": 60 * 60,
-    "24h": 24 * 60 * 60,
-    "7d": 7 * 24 * 60 * 60,
-    "forever": 0,  # 0 means never expire
-}
-
-DATA_DIR = os.getenv("DATA_DIR", "/app/data")
-MEDIA_DIR = os.path.join(DATA_DIR, "media")
-os.makedirs(MEDIA_DIR, exist_ok=True)
-
-# --- Validation constants ---
-ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
-ALLOWED_MIME_TYPES = {
-    "image/jpeg", "image/png", "image/gif",
-    "image/webp", "image/bmp",
-}
-ALLOWED_AUDIO_EXTENSIONS = {".webm", ".mp4", ".m4a", ".mp3", ".ogg", ".wav"}
-ALLOWED_AUDIO_MIME_TYPES = {
-    "audio/webm", "audio/mp4", "audio/mpeg", "audio/ogg", "audio/wav", "video/webm"
-}
-MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
-BLOCKED_FILE_EXTENSIONS = {".php", ".py", ".sh", ".exe", ".bat", ".cmd", ".html", ".htm", ".js", ".jsp", ".asp", ".aspx", ".cgi"}
-
-# --- Pydantic models ---
-class TextItem(BaseModel):
-    content: str = Field(..., max_length=100_000)
-
-class ChatItem(BaseModel):
-    author: str = Field(..., max_length=100)
-    text: str = Field(..., max_length=5000)
-
-class RoomSettings(BaseModel):
-    ttl: str = Field("24h", pattern=r"^(10m|1h|24h|7d|forever)$")
-    password: Optional[str] = Field(None, max_length=100)
-    is_readonly: bool = False
-    is_public: bool = False
-
-class OrderSettings(BaseModel):
-    order: list[str]
-
-class PasswordVerification(BaseModel):
-    password: str
 
 # --- DB Helpers ---
+def _schedule_hook(hook_name: str, **kwargs) -> None:
+    """Fire a plugin hook from any context (sync threadpool worker or async).
+
+    The running event loop is captured in lifespan and stored on app.state.loop;
+    sync callers reach it via run_coroutine_threadsafe. Async callers use
+    create_task on the current loop.
+    """
+    loop = getattr(getattr(app, "state", None), "loop", None)
+    if loop is None or not loop.is_running():
+        return
+    try:
+        running = asyncio.get_running_loop()
+        if running is loop:
+            running.create_task(plugin_manager.fire(hook_name, **kwargs))
+            return
+    except RuntimeError:
+        pass  # no running loop in this thread — fall through to threadsafe
+    asyncio.run_coroutine_threadsafe(plugin_manager.fire(hook_name, **kwargs), loop)
+
+
 def touch_room(db: Session, room_id: str, owner_id: str = None, is_public: bool = False):
     """Update last activity timestamp for a room. Creates it if it doesn't exist."""
-    import asyncio
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
     is_new = room is None
     if not room:
@@ -136,13 +111,7 @@ def touch_room(db: Session, room_id: str, owner_id: str = None, is_public: bool 
     db.commit()
     db.refresh(room)
     if is_new:
-        # Fire hook without blocking the sync caller
-        try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                loop.create_task(plugin_manager.fire("on_room_created", room_id=room_id))
-        except RuntimeError:
-            pass
+        _schedule_hook("on_room_created", room_id=room_id)
     return room
 
 def get_room_ttl(db: Session, room_id: str) -> int:
@@ -201,125 +170,12 @@ async def cleanup_stale_rooms():
         finally:
             db.close()
 
-# --- LAN Mode & QR Code ---
-def get_local_ip():
-    import socket
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    try:
-        s.connect(('10.255.255.255', 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-    return IP
-
-def print_lan_qr():
-    try:
-        import qrcode
-        host_url = os.getenv("HOST_URL", "http://localhost:8000")
-        if "localhost" in host_url or "127.0.0.1" in host_url:
-            lan_ip = get_local_ip()
-            url = host_url.replace("localhost", lan_ip).replace("127.0.0.1", lan_ip)
-        else:
-            url = host_url
-
-        qr = qrcode.QRCode(version=1, box_size=10, border=2)
-        qr.add_data(url)
-        qr.make(fit=True)
-        print("\n\033[1;32m=== Scan to connect to ClayTablet ===\033[0m")
-        print(f"URL: \033[1;36m{url}\033[0m\n")
-        qr.print_ascii(invert=True)
-        print("\n")
-    except ImportError:
-        pass
-
-# --- System rooms seed ---
-SYSTEM_ROOMS = [
-    {
-        "id": "_help",
-        "emoji": "❓",
-        "title_ru": "Помощь",
-        "title_en": "Help",
-        "description_ru": "FAQ и инструкции по использованию ClayTablet",
-        "description_en": "FAQ and how-to guides for ClayTablet",
-    },
-    {
-        "id": "_about",
-        "emoji": "📖",
-        "title_ru": "О проекте",
-        "title_en": "About",
-        "description_ru": "Что такое ClayTablet, идея и принципы",
-        "description_en": "What ClayTablet is — idea and principles",
-    },
-    {
-        "id": "_me",
-        "emoji": "👤",
-        "title_ru": "Об авторе",
-        "title_en": "About the author",
-        "description_ru": "Кто делает ClayTablet",
-        "description_en": "Who is building ClayTablet",
-    },
-    {
-        "id": "_log",
-        "emoji": "📅",
-        "title_ru": "Жизнь проекта",
-        "title_en": "Changelog",
-        "description_ru": "Что нового, планы и история версий",
-        "description_en": "What's new, plans, and version history",
-    },
-    {
-        "id": "_team",
-        "emoji": "🤝",
-        "title_ru": "Команда и благодарности",
-        "title_en": "Team & Credits",
-        "description_ru": "Контрибьюторы, доноры и все, кто помогает",
-        "description_en": "Contributors, donors and everyone who helps",
-    },
-    {
-        "id": "_terms",
-        "emoji": "📜",
-        "title_ru": "Условия использования",
-        "title_en": "Terms of use",
-        "description_ru": "Бесплатно, открытый код. Делитесь улучшениями.",
-        "description_en": "Free and open source. Please share improvements back.",
-    },
-]
-
-def seed_system_rooms(db: Session):
-    """Create system rooms if they don't exist yet."""
-    for room_meta in SYSTEM_ROOMS:
-        room_id = room_meta["id"]
-        existing = db.query(models.Room).filter(models.Room.id == room_id).first()
-        if not existing:
-            room = models.Room(
-                id=room_id,
-                ttl="forever",
-                is_system=True,
-                is_public=True,
-                is_readonly=True,
-                last_activity=time.time(),
-            )
-            db.add(room)
-            # Add a pinned description text item (bilingual)
-            item = models.Item(
-                id=str(uuid.uuid4()),
-                room_id=room_id,
-                item_type="text",
-                content=(
-                    f"{room_meta['emoji']} **{room_meta['title_ru']} / {room_meta['title_en']}**\n\n"
-                    f"🇷🇺 {room_meta['description_ru']}\n"
-                    f"🇬🇧 {room_meta['description_en']}"
-                ),
-                timestamp=time.time(),
-            )
-            db.add(item)
-            logger.info("Seeded system room: %s", room_id)
-    db.commit()
-
 # --- Lifespan ---
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Capture running loop so sync-context hooks (touch_room from threadpool) can schedule onto it
+    app.state.loop = asyncio.get_running_loop()
+
     db = database.SessionLocal()
     try:
         seed_system_rooms(db)
@@ -334,18 +190,18 @@ async def lifespan(app: FastAPI):
     await plugin_manager.fire("on_startup")
 
     task = asyncio.create_task(cleanup_stale_rooms())
-    logger.info("ClayTablet API started. SQLite DB attached. Cleanup task running every %ds.", CLEANUP_INTERVAL_SECONDS)
+    logger.info("DubTab API started. SQLite DB attached. Cleanup task running every %ds.", CLEANUP_INTERVAL_SECONDS)
     print_lan_qr()
     yield
     task.cancel()
     await plugin_manager.fire("on_shutdown")
     plugin_manager.stop_scheduler()
-    logger.info("ClayTablet API shutting down.")
+    logger.info("DubTab API shutting down.")
 
-app = FastAPI(title="ClayTablet API", lifespan=lifespan)
+app = FastAPI(title="DubTab API", lifespan=lifespan)
 
 # --- CORS: restrict origins (configurable via env) ---
-_cors_origins_raw = os.getenv("ALLOWED_ORIGINS", "https://claytablet.online,http://localhost:5173,http://localhost:3000")
+_cors_origins_raw = os.getenv("ALLOWED_ORIGINS", "https://dubtab.app,http://localhost:5173,http://localhost:3000")
 ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
 
 app.add_middleware(
@@ -403,6 +259,44 @@ plugin_manager = PluginManager()
 
 app.include_router(auth_router)
 
+def _check_room_access(room: Optional["models.Room"], token: Optional[str], password: Optional[str]) -> Optional[str]:
+    """Core access check shared by HTTP and WebSocket paths.
+
+    Returns the authenticated user_id (or None for anonymous public access).
+    Raises HTTPException(401|403) on access denial.
+    """
+    user_id = get_current_user_id_sync(token) if token else None
+    if room is None:
+        return user_id  # missing rooms are touch_room'd by callers — no auth needed
+
+    # Personal room: only the owner (authenticated via JWT) can access
+    if room.owner_id:
+        if user_id != room.owner_id:
+            raise HTTPException(status_code=403, detail="auth_required")
+        return user_id
+
+    # Password-protected room: bcrypt-check the supplied password
+    if room.password_hash:
+        if not password:
+            raise HTTPException(status_code=401, detail="password_required")
+        try:
+            ok = bcrypt.checkpw(password.encode('utf-8'), room.password_hash.encode('utf-8'))
+        except ValueError:
+            ok = False
+        if not ok:
+            raise HTTPException(status_code=401, detail="password_required")
+
+    return user_id
+
+
+def _extract_bearer_token(request: Request) -> Optional[str]:
+    token = request.cookies.get("dubtab_token")
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1]
+    return token
+
+
 def verify_room_access(
     request: Request,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -410,51 +304,15 @@ def verify_room_access(
     password: Optional[str] = Query(None),
     db: Session = Depends(database.get_db)
 ):
-    token = request.cookies.get("claytablet_token")
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        token = auth_header.split(" ")[1]
-    
-    user_id = get_current_user_id_sync(token) if token else None
-
+    token = _extract_bearer_token(request)
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
-    if room:
-        # Personal room: only the owner (authenticated via JWT) can access
-        if room.owner_id:
-            if user_id != room.owner_id:
-                raise HTTPException(status_code=403, detail="auth_required")
-            return user_id
+    return _check_room_access(room, token, x_room_password or password)
 
-        if room.password_hash:
-            pwd_provided = x_room_password or password
-            if not pwd_provided:
-                raise HTTPException(status_code=401, detail="password_required")
-            try:
-                if not bcrypt.checkpw(pwd_provided.encode('utf-8'), room.password_hash.encode('utf-8')):
-                    raise HTTPException(status_code=401, detail="password_required")
-            except ValueError:
-                raise HTTPException(status_code=401, detail="password_required")
-    return user_id
 
 def verify_room_access_sync(room_id: str, x_room_password: Optional[str], password: Optional[str], db: Session, token: Optional[str] = None):
     """Synchronous version for WebSocket endpoint which can't easily use Depends under manual flow."""
     room = db.query(models.Room).filter(models.Room.id == room_id).first()
-    if room:
-        if room.owner_id:
-            user_id = get_current_user_id_sync(token) if token else None
-            if user_id != room.owner_id:
-                raise HTTPException(status_code=403, detail="auth_required")
-            return True
-
-        if room.password_hash:
-            pwd_provided = x_room_password or password
-            if not pwd_provided:
-                raise HTTPException(status_code=401, detail="password_required")
-            try:
-                if not bcrypt.checkpw(pwd_provided.encode('utf-8'), room.password_hash.encode('utf-8')):
-                    raise HTTPException(status_code=401, detail="password_required")
-            except ValueError:
-                raise HTTPException(status_code=401, detail="password_required")
+    _check_room_access(room, token, x_room_password or password)
     return True
 
 def verify_write_access(
@@ -519,7 +377,7 @@ def _room_settings_dict(room, user_id: Optional[str]) -> dict:
         "is_owner": room.owner_id is not None and user_id == room.owner_id,
     }
 
-@app.get("/api/claytablet/{room_id}/settings")
+@app.get("/api/dubtab/{room_id}/settings")
 def get_settings(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     db: Session = Depends(database.get_db),
@@ -530,7 +388,7 @@ def get_settings(
         return {"ttl": "24h", "is_protected": False, "is_readonly": False, "is_owner": False}
     return _room_settings_dict(room, user_id)
 
-@app.post("/api/claytablet/{room_id}/settings")
+@app.post("/api/dubtab/{room_id}/settings")
 async def update_settings(
     settings: RoomSettings,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -555,7 +413,7 @@ async def update_settings(
     await broadcast_sync(room_id)
     return _room_settings_dict(room, user_id)
 
-@app.get("/api/claytablet/rooms/public")
+@app.get("/api/dubtab/rooms/public")
 def list_public_rooms(db: Session = Depends(database.get_db)):
     """List public, non-system rooms ordered by recent activity."""
     rooms = (
@@ -574,12 +432,12 @@ def list_public_rooms(db: Session = Depends(database.get_db)):
         for r in rooms
     ]
 
-@app.get("/api/claytablet/rooms/system")
+@app.get("/api/dubtab/rooms/system")
 def list_system_rooms():
     """Return the list of built-in system rooms with metadata."""
     return SYSTEM_ROOMS
 
-@app.post("/api/claytablet/{room_id}/order")
+@app.post("/api/dubtab/{room_id}/order")
 async def update_order(
     settings: OrderSettings,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX), 
@@ -593,7 +451,7 @@ async def update_order(
     return {"status": "ok"}
 
 
-@app.post("/api/claytablet/{room_id}/verify-password")
+@app.post("/api/dubtab/{room_id}/verify-password")
 def verify_password(
     payload: PasswordVerification,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -628,7 +486,7 @@ async def websocket_endpoint(
 ):
     # FIX #2: Create a short-lived DB session for auth only, don't keep it for the WS lifetime
     password = websocket.query_params.get("password")
-    token = websocket.cookies.get("claytablet_token")
+    token = websocket.cookies.get("dubtab_token")
     # CLI и другие клиенты передают токен через query param или Authorization header
     if not token:
         token = websocket.query_params.get("token")
@@ -701,7 +559,7 @@ def item_to_dict(item: models.Item):
         res["text"] = item.text
     return res
 
-@app.get("/api/claytablet/{room_id}")
+@app.get("/api/dubtab/{room_id}")
 def get_clipboard(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX), 
     db: Session = Depends(database.get_db),
@@ -732,7 +590,7 @@ def get_clipboard(
     }
 
 # ---- Create ----
-@app.post("/api/claytablet/{room_id}/text")
+@app.post("/api/dubtab/{room_id}/text")
 async def add_text(
     item: TextItem,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -846,7 +704,7 @@ async def _upload_media(
     return item_to_dict(new_item)
 
 
-@app.post("/api/claytablet/{room_id}/image")
+@app.post("/api/dubtab/{room_id}/image")
 async def add_image(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX), 
     file: UploadFile = File(...),
@@ -856,7 +714,7 @@ async def add_image(
     touch_room(db, room_id, owner_id=user_id)
     return await _upload_media(room_id, file, db, "image", ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES)
 
-@app.post("/api/claytablet/{room_id}/audio")
+@app.post("/api/dubtab/{room_id}/audio")
 async def add_audio(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     file: UploadFile = File(...),
@@ -866,7 +724,7 @@ async def add_audio(
     touch_room(db, room_id, owner_id=user_id)
     return await _upload_media(room_id, file, db, "audio", ALLOWED_AUDIO_EXTENSIONS, ALLOWED_AUDIO_MIME_TYPES)
 
-@app.post("/api/claytablet/{room_id}/file")
+@app.post("/api/dubtab/{room_id}/file")
 async def add_file(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     file: UploadFile = File(...),
@@ -877,7 +735,7 @@ async def add_file(
     touch_room(db, room_id, owner_id=user_id)
     return await _upload_media(room_id, file, db, "file", None, None, max_items=MAX_FILES_PER_ROOM)
 
-@app.post("/api/claytablet/{room_id}/chat")
+@app.post("/api/dubtab/{room_id}/chat")
 async def add_chat(
     item: ChatItem,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -909,7 +767,7 @@ async def add_chat(
     return item_to_dict(new_item)
 
 # ---- Delete ----
-@app.delete("/api/claytablet/{room_id}/all")
+@app.delete("/api/dubtab/{room_id}/all")
 async def clear_all(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     db: Session = Depends(database.get_db),
@@ -931,7 +789,7 @@ async def clear_all(
     await broadcast_sync(room_id)
     return {"status": "ok"}
 
-@app.delete("/api/claytablet/{room_id}/{item_id}")
+@app.delete("/api/dubtab/{room_id}/{item_id}")
 async def delete_item(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     item_id: str = Path(...),

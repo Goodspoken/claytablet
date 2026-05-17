@@ -1,0 +1,20 @@
+{
+  "_comment": "Скопируй этот файл как config.json и отредактируй под свои нужды",
+  "feeds": [
+    {
+      "url": "https://hnrss.org/frontpage",
+      "room_id": "hacker-news",
+      "limit": 5,
+      "interval_hours": 1,
+      "prefix": "📰"
+    },
+    {
+      "url": "https://github.com/Goodspoken/claytablet/releases.atom",
+      "room_id": "_log",
+      "limit": 3,
+      "interval_hours": 24,
+      "prefix": "🚀"
+    }
+  ],
+  "dedup_hours": 24
+}

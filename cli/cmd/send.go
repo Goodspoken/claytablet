@@ -12,9 +12,9 @@ import (
 var sendCmd = &cobra.Command{
 	Use:   "send [текст]",
 	Short: "Отправить текст в комнату",
-	Example: `  claytablet send "привет мир"
-  cat error.log | claytablet send
-  echo "$(git log --oneline -5)" | claytablet send`,
+	Example: `  dubtab send "привет мир"
+  cat error.log | dubtab send
+  echo "$(git log --oneline -5)" | dubtab send`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var content string
 
@@ -25,7 +25,7 @@ var sendCmd = &cobra.Command{
 			// Иначе читаем из stdin (пайп)
 			stat, _ := os.Stdin.Stat()
 			if (stat.Mode() & os.ModeCharDevice) != 0 {
-				return fmt.Errorf("нет текста: передай аргумент или используй пайп (cat file | claytablet send)")
+				return fmt.Errorf("нет текста: передай аргумент или используй пайп (cat file | dubtab send)")
 			}
 			b, err := io.ReadAll(os.Stdin)
 			if err != nil {
@@ -38,7 +38,7 @@ var sendCmd = &cobra.Command{
 			return fmt.Errorf("пустой текст — нечего отправлять")
 		}
 
-		item, err := client.SendText(content)
+		item, err := client.SendText(cmd.Context(), content)
 		if err != nil {
 			return err
 		}

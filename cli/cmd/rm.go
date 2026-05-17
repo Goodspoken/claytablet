@@ -10,14 +10,14 @@ import (
 var rmCmd = &cobra.Command{
 	Use:   "rm <номер или id>",
 	Short: "Удалить запись из комнаты",
-	Example: `  claytab rm 3              # по порядковому номеру из ls
-  claytab rm a1b2c3d4       # по префиксу ID
-  claytab rm 3 --yes        # без подтверждения`,
+	Example: `  dubtab rm 3              # по порядковому номеру из ls
+  dubtab rm a1b2c3d4       # по префиксу ID
+  dubtab rm 3 --yes        # без подтверждения`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		yes, _ := cmd.Flags().GetBool("yes")
 
-		data, err := client.GetRoom()
+		data, err := client.GetRoom(cmd.Context())
 		if err != nil {
 			return err
 		}
@@ -45,7 +45,7 @@ var rmCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.DeleteItem(target.id); err != nil {
+		if err := client.DeleteItem(cmd.Context(), target.id); err != nil {
 			return err
 		}
 		idShort := target.id

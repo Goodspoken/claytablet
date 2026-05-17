@@ -1,0 +1,23 @@
+# docker-compose для Clouvider VPS (213.255.246.146)
+# Caddy — внешний, общий для всего VPS (/home/illz/caddy/)
+# Этот файл только поднимает бэкенд на localhost:8777
+# Фронтенд собирается и раздаётся внешним Caddy
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: claytablet-backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8777:8000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

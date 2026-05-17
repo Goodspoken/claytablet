@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/claytablet/cli/api"
+	"github.com/Goodspoken/dubtab/cli/api"
 )
 
 type listEntry struct {

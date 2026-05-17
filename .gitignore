@@ -22,9 +22,10 @@ mobile/node_modules/
 *.tsbuildinfo
 
 # Go / CLI
-cli/claytab
-cli/claytab-linux
-cli/claytab.exe
+cli/claytab*
+cli/claytablet*
+claytab*
+claytablet*
 
 # Data & media
 data/

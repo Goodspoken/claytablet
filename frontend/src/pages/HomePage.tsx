@@ -9,7 +9,7 @@ import * as api from '../api';
 import { generateId, timeAgo } from '../helpers';
 import type { PublicRoom, SystemRoom } from '../types';
 
-const PENDING_ROOM_KEY = 'claytablet_pending_room';
+const PENDING_ROOM_KEY = 'dubtab_pending_room';
 const isValidRoomName = (name: string) => /^[a-zA-Z0-9_-]{2,32}$/.test(name);
 
 export default function HomePage() {
@@ -94,11 +94,11 @@ export default function HomePage() {
   const formatActivity = (ts: number) => timeAgo(ts, lang);
 
   const steps = lang === 'RU' ? [
-    { icon: Monitor, title: 'Откройте на компьютере', desc: 'Зайдите на claytablet.online' },
+    { icon: Monitor, title: 'Откройте на компьютере', desc: 'Зайдите на dubtab.app' },
     { icon: Clipboard, title: 'Скопируйте что угодно', desc: 'Текст, фото, файлы — Ctrl+V или 📎' },
     { icon: Smartphone, title: 'Откройте на телефоне', desc: 'Та же ссылка — всё уже там' },
   ] : [
-    { icon: Monitor, title: 'Open on your PC', desc: 'Go to claytablet.online' },
+    { icon: Monitor, title: 'Open on your PC', desc: 'Go to dubtab.app' },
     { icon: Clipboard, title: 'Paste anything', desc: 'Text, photos, files — Ctrl+V or 📎' },
     { icon: Smartphone, title: 'Open on your phone', desc: 'Same link — everything is there' },
   ];
@@ -340,7 +340,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="text-center pb-8 text-sm text-slate-400 dark:text-slate-600">
-        ClayTablet © {new Date().getFullYear()} ·{' '}
+        DubTab © {new Date().getFullYear()} ·{' '}
         <Link to="/_terms" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
           {lang === 'RU' ? 'Условия' : 'Terms'}
         </Link>

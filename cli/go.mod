@@ -1,4 +1,4 @@
-module github.com/claytablet/cli
+module github.com/Goodspoken/dubtab/cli
 
 go 1.24.2
 
@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	github.com/zalando/go-keyring v0.2.6
 )
 
 require (

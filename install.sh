@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# ClayTablet — self-hosted installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/Goodspoken/claytablet/main/install.sh | bash
+# DubTab — self-hosted installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/Goodspoken/dubtab/main/install.sh | bash
 set -euo pipefail
 
-INSTALL_DIR="${CLAYTABLET_DIR:-$HOME/claytablet}"
-REPO_URL="https://github.com/claytablet/claytablet"  # replace when open-sourced
+INSTALL_DIR="${CLAYTABLET_DIR:-$HOME/dubtab}"
+REPO_URL="https://github.com/dubtab/dubtab"  # replace when open-sourced
 
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BOLD='\033[1m'; NC='\033[0m'
 
@@ -13,7 +13,7 @@ warn()    { echo -e "${YELLOW}⚠${NC}  $*"; }
 error()   { echo -e "${RED}✗${NC} $*" >&2; exit 1; }
 
 echo ""
-echo -e "${BOLD}ClayTablet — Self-Hosted Installer${NC}"
+echo -e "${BOLD}DubTab — Self-Hosted Installer${NC}"
 echo "──────────────────────────────────────"
 
 # ── Check dependencies ────────────────────────────────────────────────────────
@@ -29,7 +29,7 @@ if [ -d "$INSTALL_DIR/.git" ]; then
     info "Updating existing installation in $INSTALL_DIR ..."
     git -C "$INSTALL_DIR" pull --ff-only
 else
-    info "Cloning ClayTablet into $INSTALL_DIR ..."
+    info "Cloning DubTab into $INSTALL_DIR ..."
     git clone --depth=1 "$REPO_URL" "$INSTALL_DIR"
 fi
 cd "$INSTALL_DIR"
@@ -67,7 +67,7 @@ docker compose -f "$COMPOSE_FILE" up -d --build
 LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}' || echo "localhost")
 LAN_URL="http://${LOCAL_IP}:${PORT}"
 echo ""
-echo -e "${BOLD}${GREEN}✓ ClayTablet is running!${NC}"
+echo -e "${BOLD}${GREEN}✓ DubTab is running!${NC}"
 echo ""
 echo -e "  🌐 http://localhost:${PORT}"
 echo -e "  🌐 ${LAN_URL}  (LAN access)"

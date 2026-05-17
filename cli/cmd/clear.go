@@ -10,8 +10,8 @@ import (
 var clearCmd = &cobra.Command{
 	Use:   "clear",
 	Short: "Очистить всю комнату",
-	Example: `  claytab clear
-  claytab clear --yes   # без подтверждения`,
+	Example: `  dubtab clear
+  dubtab clear --yes   # без подтверждения`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		yes, _ := cmd.Flags().GetBool("yes")
 
@@ -25,7 +25,7 @@ var clearCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.ClearRoom(); err != nil {
+		if err := client.ClearRoom(cmd.Context()); err != nil {
 			return err
 		}
 		fmt.Printf("✓ Комната \"%s\" очищена\n", client.Room)
