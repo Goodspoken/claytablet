@@ -13,8 +13,8 @@ import (
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Сохранить настройки (сервер, комната, пароль)",
-	Example: `  dubtab config --server https://dubtab.app --room my-room
-  dubtab config --server http://localhost:8080 --room test`,
+	Example: `  claytablet config --server https://claytablet.online --room my-room
+  claytablet config --server http://localhost:8080 --room test`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if s, _ := cmd.Flags().GetString("server"); s != "" {
 			viper.Set("server", s)
@@ -23,11 +23,11 @@ var configCmd = &cobra.Command{
 			viper.Set("room", r)
 		}
 		if p, _ := cmd.Flags().GetString("password"); p != "" {
-			keyring.Set("dubtab", "password", p)
+			keyring.Set("claytablet", "password", p)
 			viper.Set("password", "") // Убираем из открытого текста
 		}
 		if t, _ := cmd.Flags().GetString("token"); t != "" {
-			keyring.Set("dubtab", "token", t)
+			keyring.Set("claytablet", "token", t)
 			viper.Set("token", "") // Убираем из открытого текста
 		}
 
@@ -35,7 +35,7 @@ var configCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		cfgPath := filepath.Join(home, ".config", "dubtab.toml")
+		cfgPath := filepath.Join(home, ".config", "claytablet.toml")
 		os.MkdirAll(filepath.Dir(cfgPath), 0755)
 
 		if err := viper.WriteConfigAs(cfgPath); err != nil {

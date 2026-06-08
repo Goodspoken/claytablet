@@ -1,5 +1,5 @@
 """
-DubTab Plugin SDK — imported by plugins via `from dubtab_sdk import ...`
+ClayTablet Plugin SDK — imported by plugins via `from claytablet_sdk import ...`
 
 The PluginManager injects itself into each plugin module's globals before execution,
 so decorators can register hooks/routes/schedules into the live manager instance.
@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Callable
 if TYPE_CHECKING:
     from plugin_manager import PluginManager
 
-logger = logging.getLogger("dubtab.plugin_sdk")
+logger = logging.getLogger("claytablet.plugin_sdk")
 
 # Set by PluginManager.load_plugins() before each plugin module is executed.
 # Each plugin gets its own SDK context object so there's no global state bleed.
@@ -106,11 +106,11 @@ http = _HttpNamespace()
 
 
 # ---------------------------------------------------------------------------
-# api — DubTab internal API for plugins
+# api — ClayTablet internal API for plugins
 # ---------------------------------------------------------------------------
 
 class _PluginAPI:
-    """Thin async wrapper around DubTab's internal operations.
+    """Thin async wrapper around ClayTablet's internal operations.
 
     Plugins call e.g. ``await api.add_text(room_id, content)`` without
     having to import SQLAlchemy or know the DB schema.

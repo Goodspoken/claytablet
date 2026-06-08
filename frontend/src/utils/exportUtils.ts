@@ -17,7 +17,7 @@ export const downloadAsTxt = (roomId: string, items: ClipboardItem[], chats: Cha
   const baseUrl = window.location.origin;
 
   const lines: string[] = [];
-  lines.push(`=== DubTab — Room: ${roomId} ===`);
+  lines.push(`=== ClayTablet — Room: ${roomId} ===`);
   lines.push(`Date: ${dateStr} ${timeStr}`);
   lines.push('');
 
@@ -58,7 +58,7 @@ export const downloadAsTxt = (roomId: string, items: ClipboardItem[], chats: Cha
 
   const text = lines.join('\n');
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-  downloadBlob(blob, `dubtab_${roomId}_${dateStr.replace(/\./g, '-')}.txt`);
+  downloadBlob(blob, `claytablet_${roomId}_${dateStr.replace(/\./g, '-')}.txt`);
 };
 
 export const downloadAsMd = (roomId: string, items: ClipboardItem[], chats: ChatMsg[], locale = 'ru-RU') => {
@@ -66,7 +66,7 @@ export const downloadAsMd = (roomId: string, items: ClipboardItem[], chats: Chat
   const baseUrl = window.location.origin;
 
   const lines: string[] = [];
-  lines.push(`# DubTab — Room: ${roomId}`);
+  lines.push(`# ClayTablet — Room: ${roomId}`);
   lines.push(`*Export Date: ${dateStr} ${timeStr}*`);
   lines.push('');
 
@@ -109,7 +109,7 @@ export const downloadAsMd = (roomId: string, items: ClipboardItem[], chats: Chat
 
   const text = lines.join('\n');
   const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
-  downloadBlob(blob, `dubtab_${roomId}_${dateStr.replace(/\./g, '-')}.md`);
+  downloadBlob(blob, `claytablet_${roomId}_${dateStr.replace(/\./g, '-')}.md`);
 };
 
 export const downloadAsZip = async (roomId: string, items: ClipboardItem[], chats: ChatMsg[], locale = 'ru-RU') => {
@@ -122,7 +122,7 @@ export const downloadAsZip = async (roomId: string, items: ClipboardItem[], chat
   const images = items.filter(i => i.type === 'image');
   const audios = items.filter(i => i.type === 'audio');
   
-  let mdContent = `# DubTab — Room: ${roomId}\n\n`;
+  let mdContent = `# ClayTablet — Room: ${roomId}\n\n`;
   if (texts.length > 0) {
     mdContent += '## Notes\n';
     texts.forEach(t => { mdContent += `**[${formatTime(t.timestamp, locale)}]**\n${t.content}\n\n`; });
@@ -173,7 +173,7 @@ export const downloadAsZip = async (roomId: string, items: ClipboardItem[], chat
   await Promise.all(mediaPromises);
 
   const content = await zip.generateAsync({ type: 'blob' });
-  downloadBlob(content, `dubtab_${roomId}_${dateStr.replace(/\./g, '-')}.zip`);
+  downloadBlob(content, `claytablet_${roomId}_${dateStr.replace(/\./g, '-')}.zip`);
 };
 
 function downloadBlob(blob: Blob, filename: string) {

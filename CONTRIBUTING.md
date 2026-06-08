@@ -1,6 +1,6 @@
-# Contributing to DubTab
+# Contributing to ClayTablet
 
-Thank you for your interest in contributing to DubTab! We believe in building an open and welcoming community.
+Thank you for your interest in contributing to ClayTablet! We believe in building an open and welcoming community.
 
 ## How to Contribute
 

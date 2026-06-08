@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/Goodspoken/dubtab/cli/api"
+	"github.com/claytablet/claytablet/cli/api"
 	"github.com/spf13/cobra"
 )
 
@@ -66,6 +67,7 @@ type itemEntry struct {
 	kind      string
 	content   string
 	createdAt string
+	item      *api.Item
 }
 
 type tuiMode int
@@ -106,6 +108,7 @@ type wsUpdateMsg struct{}
 type wsSendOkMsg struct{}
 type pluginsMsg []api.PluginInfo
 type pluginConfigMsg string
+type downloadOkMsg string
 
 func initialModel() model {
 	ti := textinput.New()
@@ -122,21 +125,21 @@ func fetchRoomData() tea.Msg {
 		return errMsg{err}
 	}
 	var all []itemEntry
-	for _, t := range data.Texts {
-		all = append(all, itemEntry{t.ID, "TEXT", t.Content, t.CreatedAt})
+	for i := range data.Texts {
+		all = append(all, itemEntry{data.Texts[i].ID, "TEXT", data.Texts[i].Content, data.Texts[i].CreatedAt, &data.Texts[i]})
 	}
-	for _, img := range data.Images {
-		name := img.Filename
+	for i := range data.Images {
+		name := data.Images[i].Filename
 		if name == "" {
-			name = img.URL
+			name = data.Images[i].URL
 		}
-		all = append(all, itemEntry{img.ID, "IMG ", name, img.CreatedAt})
+		all = append(all, itemEntry{data.Images[i].ID, "IMG ", name, data.Images[i].CreatedAt, &data.Images[i]})
 	}
-	for _, a := range data.Audios {
-		all = append(all, itemEntry{a.ID, "AUD ", a.URL, a.CreatedAt})
+	for i := range data.Audios {
+		all = append(all, itemEntry{data.Audios[i].ID, "AUD ", data.Audios[i].URL, data.Audios[i].CreatedAt, &data.Audios[i]})
 	}
-	for _, f := range data.Files {
-		all = append(all, itemEntry{f.ID, "FILE", f.Filename, f.CreatedAt})
+	for i := range data.Files {
+		all = append(all, itemEntry{data.Files[i].ID, "FILE", data.Files[i].Filename, data.Files[i].CreatedAt, &data.Files[i]})
 	}
 	return dataMsg(all)
 }
@@ -298,6 +301,12 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case statusClearMsg:
 		m.statusMsg = ""
 
+	case downloadOkMsg:
+		m.statusMsg = string(msg)
+		m.statusOk = true
+		m.statusWarn = false
+		cmds = append(cmds, clearStatusAfter(4*time.Second))
+
 	case pluginsMsg:
 		m.plugins = msg
 		m.pluginsLoading = false
@@ -400,11 +409,47 @@ func (m *model) handleNormalKey(msg tea.KeyMsg) []tea.Cmd {
 			}}
 		}
 
-	case "n", "s":
+	case "n":
 		m.mode = modeInput
 		m.input.SetValue("")
 		m.input.Focus()
 		return []tea.Cmd{textinput.Blink}
+
+	case "s", "S", "D":
+		if len(m.items) > 0 && m.cursor < len(m.items) {
+			item := m.items[m.cursor]
+			if strings.TrimSpace(item.kind) == "TEXT" {
+				m.statusMsg = "Сохранять можно только файлы (используй 'c' для текста)"
+				m.statusOk = false
+				m.statusWarn = true
+				return []tea.Cmd{clearStatusAfter(3 * time.Second)}
+			}
+			
+			if item.item == nil || item.item.URL == "" {
+				m.statusMsg = "✗ Нет URL для скачивания"
+				m.statusOk = false
+				m.statusWarn = false
+				return []tea.Cmd{clearStatusAfter(3 * time.Second)}
+			}
+
+			filename := item.item.Filename
+			if filename == "" {
+				filename = filepath.Base(item.item.URL)
+			}
+			
+			m.statusMsg = "Скачивание " + filename + "..."
+			m.statusOk = true
+			m.statusWarn = false
+
+			url := client.BaseURL + item.item.URL
+			
+			return []tea.Cmd{func() tea.Msg {
+				if err := client.DownloadFile(context.Background(), url, filename); err != nil {
+					return errMsg{err}
+				}
+				return downloadOkMsg("✓ Сохранено: " + filename)
+			}}
+		}
 
 	case "p":
 		m.mode = modePlugins
@@ -566,7 +611,7 @@ func renderKind(kind string) string {
 
 func (m model) View() string {
 	wsIndicator := styleStatusOk.Render("●")
-	header := styleHeader.Render("DubTab TUI") + "  " + wsIndicator +
+	header := styleHeader.Render("ClayTablet TUI") + "  " + wsIndicator +
 		styleDim.Render(fmt.Sprintf("  %s  (%d записей)", client.Room, len(m.items)))
 
 	var body string
@@ -657,7 +702,7 @@ func (m model) View() string {
 				footer = styleStatusErr.Render(m.statusMsg)
 			}
 		} else {
-			footer = styleDim.Render("↑/k ↓/j: навигация  enter: просмотр  y: копировать  d: удалить  n: новая  p: плагины  q: выход")
+			footer = styleDim.Render("↑/k ↓/j: навигация  enter: просмотр  y/c: копировать  s: сохранить файл  d: удалить  n: новая  p: плагины  q: выход")
 		}
 	}
 

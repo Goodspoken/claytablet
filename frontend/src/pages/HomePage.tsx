@@ -9,7 +9,7 @@ import * as api from '../api';
 import { generateId, timeAgo } from '../helpers';
 import type { PublicRoom, SystemRoom } from '../types';
 
-const PENDING_ROOM_KEY = 'dubtab_pending_room';
+const PENDING_ROOM_KEY = 'claytablet_pending_room';
 const isValidRoomName = (name: string) => /^[a-zA-Z0-9_-]{2,32}$/.test(name);
 
 export default function HomePage() {
@@ -23,8 +23,10 @@ export default function HomePage() {
   const [isPublic, setIsPublic] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [myRooms, setMyRooms] = useState<{ id: string; ttl: string; last_activity?: string }[]>([]);
-  const [roomsLoading, setRoomsLoading] = useState(false);
+  type MyRoom = { id: string; ttl: string; last_activity?: string };
+  const [myRooms, setMyRooms] = useState<MyRoom[] | null>(null);
+  // Derive loading state to avoid a setState-in-effect race when fetching myRooms.
+  const roomsLoading = !!user && myRooms === null;
   const [publicRooms, setPublicRooms] = useState<PublicRoom[]>([]);
   const [systemRooms, setSystemRooms] = useState<SystemRoom[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -32,14 +34,14 @@ export default function HomePage() {
 
   // Load user's rooms when user becomes available
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      return;
+    }
+    let active = true;
     api.getMyRooms()
-      .then((rooms: { id: string; ttl: string; last_activity?: string }[]) => {
-        setMyRooms(rooms);
-        setRoomsLoading(false);
-      })
-      .catch(() => { setMyRooms([]); setRoomsLoading(false); });
-    void Promise.resolve().then(() => setRoomsLoading(true));
+      .then((rooms: MyRoom[]) => { if (active) setMyRooms(rooms); })
+      .catch(() => { if (active) setMyRooms([]); });
+    return () => { active = false; };
   }, [user]);
 
   // Load public + system rooms on mount
@@ -62,13 +64,13 @@ export default function HomePage() {
   // Auto-redirect if exactly one room
   useEffect(() => {
     if (isLoading || roomsLoading || didAutoRedirect.current) return;
-    if (!user || myRooms.length !== 1 || roomInput.trim()) return;
+    if (!user || !myRooms || myRooms.length !== 1 || roomInput.trim()) return;
     if (localStorage.getItem(PENDING_ROOM_KEY)) return;
     didAutoRedirect.current = true;
     navigate(`/${myRooms[0].id}`);
   }, [user, myRooms, roomsLoading, isLoading, navigate, roomInput]);
 
-  const goToRoom = (id?: string) => {
+  const goToRoom = async (id?: string) => {
     const target = id ?? (roomInput.trim() || generateId());
     if (roomInput.trim() && !isValidRoomName(roomInput.trim())) {
       setInputError(
@@ -78,11 +80,21 @@ export default function HomePage() {
       );
       return;
     }
+    // When user explicitly toggled "public" for a fresh room, materialize the room
+    // (first GET creates it server-side) and persist the flag before navigating.
+    if (isPublic && !id) {
+      try {
+        await api.fetchClipboard(target);
+        await api.updateRoomSettings(target, { ttl: '24h', is_public: true });
+      } catch {
+        // ignore — Board page will retry / surface errors
+      }
+    }
     navigate(`/${target}`);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') goToRoom();
+    if (e.key === 'Enter') void goToRoom();
   };
 
   const openAuthWithPendingRoom = () => {
@@ -94,11 +106,11 @@ export default function HomePage() {
   const formatActivity = (ts: number) => timeAgo(ts, lang);
 
   const steps = lang === 'RU' ? [
-    { icon: Monitor, title: 'Откройте на компьютере', desc: 'Зайдите на dubtab.app' },
+    { icon: Monitor, title: 'Откройте на компьютере', desc: 'Зайдите на claytablet.online' },
     { icon: Clipboard, title: 'Скопируйте что угодно', desc: 'Текст, фото, файлы — Ctrl+V или 📎' },
     { icon: Smartphone, title: 'Откройте на телефоне', desc: 'Та же ссылка — всё уже там' },
   ] : [
-    { icon: Monitor, title: 'Open on your PC', desc: 'Go to dubtab.app' },
+    { icon: Monitor, title: 'Open on your PC', desc: 'Go to claytablet.online' },
     { icon: Clipboard, title: 'Paste anything', desc: 'Text, photos, files — Ctrl+V or 📎' },
     { icon: Smartphone, title: 'Open on your phone', desc: 'Same link — everything is there' },
   ];
@@ -108,11 +120,15 @@ export default function HomePage() {
       {/* Top bar */}
       <nav className="flex items-center justify-between px-6 sm:px-10 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900/30 rotate-3">
-            <span className="text-white font-bold text-xl">C</span>
-          </div>
-          <span className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
-            Clay<span className="text-indigo-600 dark:text-indigo-400">Tablet</span>
+          <img
+            src="/logo-tablet-192.png"
+            alt="ClayTablet"
+            className="w-14 h-14 sm:w-16 sm:h-16 drop-shadow-md"
+            width={64}
+            height={64}
+          />
+          <span className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-[#2d1056] via-[#6b3aa0] to-[#3a1e5c] dark:from-[#b58bff] dark:via-[#d4b0ff] dark:to-[#b58bff] bg-clip-text text-transparent">
+            ClayTablet
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -170,7 +186,7 @@ export default function HomePage() {
                 spellCheck={false}
               />
               <button
-                onClick={() => goToRoom()}
+                onClick={() => void goToRoom()}
                 className="mr-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-bold rounded-xl transition-all hover:shadow-lg active:scale-95 flex items-center gap-2 shrink-0"
               >
                 {lang === 'RU' ? 'Перейти' : 'Go'}
@@ -240,7 +256,7 @@ export default function HomePage() {
         </div>
 
         {/* My Rooms */}
-        {user && !roomsLoading && myRooms.length > 0 && (
+        {user && !roomsLoading && myRooms && myRooms.length > 0 && (
           <div className="mb-10">
             <h2 className="text-base font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
               {user.picture && <img src={user.picture} alt="" className="w-5 h-5 rounded-full" />}
@@ -340,9 +356,13 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="text-center pb-8 text-sm text-slate-400 dark:text-slate-600">
-        DubTab © {new Date().getFullYear()} ·{' '}
-        <Link to="/_terms" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
+        ClayTablet © {new Date().getFullYear()} ·{' '}
+        <Link to="/terms" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
           {lang === 'RU' ? 'Условия' : 'Terms'}
+        </Link>
+        {' · '}
+        <Link to="/privacy" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
+          {lang === 'RU' ? 'Конфиденциальность' : 'Privacy'}
         </Link>
       </footer>
 

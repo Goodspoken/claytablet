@@ -1,5 +1,5 @@
 """
-Basic API tests for DubTab backend.
+Basic API tests for ClayTablet backend.
 Run with: pytest tests/ -v
 """
 import os
@@ -52,7 +52,7 @@ class TestRoomOperations:
     ROOM = "test-room"
 
     def test_get_empty_room(self, client):
-        r = client.get(f"/api/dubtab/{self.ROOM}")
+        r = client.get(f"/api/claytablet/{self.ROOM}")
         assert r.status_code == 200
         data = r.json()
         assert data["texts"] == []
@@ -62,25 +62,25 @@ class TestRoomOperations:
 
     def test_add_text(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/text",
-            json={"content": "Hello, PopyCast!"}
+            f"/api/claytablet/{self.ROOM}/text",
+            json={"content": "Hello, ClayTablet!"}
         )
         assert r.status_code == 200
         data = r.json()
-        assert data["content"] == "Hello, PopyCast!"
+        assert data["content"] == "Hello, ClayTablet!"
         assert data["type"] == "text"
         assert "id" in data
 
     def test_get_room_with_text(self, client):
-        r = client.get(f"/api/dubtab/{self.ROOM}")
+        r = client.get(f"/api/claytablet/{self.ROOM}")
         assert r.status_code == 200
         data = r.json()
         assert len(data["texts"]) >= 1
-        assert data["texts"][0]["content"] == "Hello, PopyCast!"
+        assert data["texts"][0]["content"] == "Hello, ClayTablet!"
 
     def test_add_chat_message(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/chat",
+            f"/api/claytablet/{self.ROOM}/chat",
             json={"author": "TestUser", "text": "Hello chat!"}
         )
         assert r.status_code == 200
@@ -91,20 +91,20 @@ class TestRoomOperations:
     def test_delete_item(self, client):
         # Add an item, then delete it
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/text",
+            f"/api/claytablet/{self.ROOM}/text",
             json={"content": "Delete me"}
         )
         item_id = r.json()["id"]
         
-        r = client.delete(f"/api/dubtab/{self.ROOM}/{item_id}")
+        r = client.delete(f"/api/claytablet/{self.ROOM}/{item_id}")
         assert r.status_code == 200
         assert r.json()["status"] == "ok"
 
     def test_clear_all(self, client):
-        r = client.delete(f"/api/dubtab/{self.ROOM}/all")
+        r = client.delete(f"/api/claytablet/{self.ROOM}/all")
         assert r.status_code == 200
         
-        r = client.get(f"/api/dubtab/{self.ROOM}")
+        r = client.get(f"/api/claytablet/{self.ROOM}")
         data = r.json()
         assert data["texts"] == []
 
@@ -113,7 +113,7 @@ class TestRoomSettings:
     ROOM = "settings-room"
 
     def test_get_default_settings(self, client):
-        r = client.get(f"/api/dubtab/{self.ROOM}/settings")
+        r = client.get(f"/api/claytablet/{self.ROOM}/settings")
         assert r.status_code == 200
         data = r.json()
         assert data["ttl"] == "24h"
@@ -121,7 +121,7 @@ class TestRoomSettings:
 
     def test_update_ttl(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/settings",
+            f"/api/claytablet/{self.ROOM}/settings",
             json={"ttl": "7d"}
         )
         assert r.status_code == 200
@@ -129,7 +129,7 @@ class TestRoomSettings:
 
     def test_set_password(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/settings",
+            f"/api/claytablet/{self.ROOM}/settings",
             json={"ttl": "24h", "password": "secret123"}
         )
         assert r.status_code == 200
@@ -137,32 +137,32 @@ class TestRoomSettings:
 
     def test_verify_wrong_password(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/verify-password",
+            f"/api/claytablet/{self.ROOM}/verify-password",
             json={"password": "wrong"}
         )
         assert r.status_code == 401
 
     def test_verify_correct_password(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/verify-password",
+            f"/api/claytablet/{self.ROOM}/verify-password",
             json={"password": "secret123"}
         )
         assert r.status_code == 200
 
     def test_access_without_password(self, client):
-        r = client.get(f"/api/dubtab/{self.ROOM}")
+        r = client.get(f"/api/claytablet/{self.ROOM}")
         assert r.status_code == 401
 
     def test_access_with_password(self, client):
         r = client.get(
-            f"/api/dubtab/{self.ROOM}",
+            f"/api/claytablet/{self.ROOM}",
             headers={"X-Room-Password": "secret123"}
         )
         assert r.status_code == 200
 
     def test_remove_password(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/settings",
+            f"/api/claytablet/{self.ROOM}/settings",
             json={"ttl": "24h", "password": ""},
             headers={"X-Room-Password": "secret123"}
         )
@@ -175,7 +175,7 @@ class TestImageUpload:
 
     def test_upload_invalid_type(self, client):
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/image",
+            f"/api/claytablet/{self.ROOM}/image",
             files={"file": ("test.txt", b"not an image", "text/plain")}
         )
         assert r.status_code == 400
@@ -199,7 +199,7 @@ class TestImageUpload:
         
         png = _make_png()
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/image",
+            f"/api/claytablet/{self.ROOM}/image",
             files={"file": ("test.png", png, "image/png")}
         )
         assert r.status_code == 200
@@ -210,11 +210,11 @@ class TestImageUpload:
 
 class TestValidation:
     def test_invalid_room_id(self, client):
-        r = client.get("/api/dubtab/a")  # too short (min 2)
+        r = client.get("/api/claytablet/a")  # too short (min 2)
         assert r.status_code == 422
 
     def test_invalid_room_id_special_chars(self, client):
-        r = client.get("/api/dubtab/room with spaces")
+        r = client.get("/api/claytablet/room with spaces")
         assert r.status_code == 422
 
 
@@ -228,28 +228,28 @@ class TestRateLimiting:
         app_main._rate_limit_store.pop(rate_key, None)
 
         client.post(
-            f"/api/dubtab/{self.ROOM}/settings",
+            f"/api/claytablet/{self.ROOM}/settings",
             json={"ttl": "24h", "password": "test123"}
         )
 
         # First 5 wrong attempts should be 401 (not rate-limited yet)
         for i in range(5):
             r = client.post(
-                f"/api/dubtab/{self.ROOM}/verify-password",
+                f"/api/claytablet/{self.ROOM}/verify-password",
                 json={"password": "wrong"}
             )
             assert r.status_code == 401, f"attempt {i+1} should be 401, got {r.status_code}"
 
         # 6th attempt should be 429
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/verify-password",
+            f"/api/claytablet/{self.ROOM}/verify-password",
             json={"password": "wrong"}
         )
         assert r.status_code == 429
 
         # Even correct password is blocked during rate limit
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/verify-password",
+            f"/api/claytablet/{self.ROOM}/verify-password",
             json={"password": "test123"}
         )
         assert r.status_code == 429
@@ -306,7 +306,7 @@ class TestPersonalRooms:
         self._set_room_owner(self.ROOM, self.USER_ID)
 
         # Без авторизации → 403 (не 401!)
-        r = client.get(f"/api/dubtab/{self.ROOM}")
+        r = client.get(f"/api/claytablet/{self.ROOM}")
         assert r.status_code == 403
         assert r.json()["detail"] == "auth_required"
 
@@ -316,7 +316,7 @@ class TestPersonalRooms:
 
         # Владелец с JWT → 200
         r = client.get(
-            f"/api/dubtab/{self.ROOM}",
+            f"/api/claytablet/{self.ROOM}",
             headers={"Authorization": f"Bearer {token}"}
         )
         assert r.status_code == 200
@@ -328,7 +328,7 @@ class TestPersonalRooms:
 
         # Другой пользователь → 403
         r = client.get(
-            f"/api/dubtab/{self.ROOM}",
+            f"/api/claytablet/{self.ROOM}",
             headers={"Authorization": f"Bearer {other_token}"}
         )
         assert r.status_code == 403
@@ -338,7 +338,7 @@ class TestPersonalRooms:
 
         # verify-password для личной комнаты → 403 (не 401)
         r = client.post(
-            f"/api/dubtab/{self.ROOM}/verify-password",
+            f"/api/claytablet/{self.ROOM}/verify-password",
             json={"password": "anything"}
         )
         assert r.status_code == 403

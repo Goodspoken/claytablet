@@ -1,4 +1,4 @@
-"""Constants shared across the DubTab backend."""
+"""Constants shared across the ClayTablet backend."""
 import os
 
 ROOM_ID_REGEX = r"^[a-zA-Z0-9_-]{2,32}$"

@@ -6,7 +6,7 @@
 # ============================================================
 set -e
 
-APP_DIR="/opt/dubtab"
+APP_DIR="/opt/claytablet"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
 echo "🚀 PopyCast Deploy"
@@ -35,7 +35,7 @@ cd "$APP_DIR"
 mkdir -p data/images data/media
 
 # Fix permissions so the container can write to the DB and media
-chmod 666 data/dubtab.db 2>/dev/null || true
+chmod 666 data/claytablet.db 2>/dev/null || true
 chmod 777 data/media data/images 2>/dev/null || true
 
 # --- Restart ---

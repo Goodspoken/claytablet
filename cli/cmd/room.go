@@ -10,16 +10,16 @@ import (
 var roomCmd = &cobra.Command{
 	Use:   "room [id]",
 	Short: "Переключиться на комнату или показать текущую",
-	Example: `  dubtab room                  # показать текущую комнату
-  dubtab room fc0f6029b5        # переключиться на комнату
-  dubtab room illz              # переключиться по имени`,
+	Example: `  claytablet room                  # показать текущую комнату
+  claytablet room fc0f6029b5        # переключиться на комнату
+  claytablet room illz              # переключиться по имени`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			current := viper.GetString("room")
 			server := viper.GetString("server")
 			if current == "" {
-				fmt.Println("Текущая комната не задана. Используй: dubtab room <id>")
+				fmt.Println("Текущая комната не задана. Используй: claytablet room <id>")
 			} else {
 				fmt.Printf("Текущая комната: %s\n", current)
 				fmt.Printf("URL: %s/%s\n", server, current)

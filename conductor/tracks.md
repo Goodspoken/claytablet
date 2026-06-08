@@ -55,12 +55,12 @@
   *Приоритет: 🟢 Низкий* *(завершено)*
   *Описание: Dropdown с выбором формата: .txt, .md (Markdown), .zip (тексты + медиафайлы).*
 
-- [x] **Трек: Ребрендинг + деплой на dubtab.app + OAuth**
+- [x] **Трек: Ребрендинг + деплой на claytablet.online + OAuth**
   *Приоритет: 🔴 Высокий* *(завершён ✅)*
   *Ссылка: [./tracks/rebranding_auth_20260424.md](./tracks/rebranding_auth_20260424.md)*
-  *Описание: Домен dubtab.app + dubtab.ru запущен. Caddy + Let’s Encrypt работают. Google OAuth (опубликован) + Yandex OAuth включены и протестированы. Авторизация работает!*
+  *Описание: Домен claytablet.online + claytablet.ru запущен. Caddy + Let’s Encrypt работают. Google OAuth (опубликован) + Yandex OAuth включены и протестированы. Авторизация работает!*
 
-- [x] **Трек: Фикс тестов + Первый деплой на VPS (dubtab.app)**
+- [x] **Трек: Фикс тестов + Первый деплой на VPS (claytablet.online)**
   *Приоритет: 🔴 Критический* *(завершён ✅)*
   *Ссылка: [./tracks/deploy_and_fixes_20260426.md](./tracks/deploy_and_fixes_20260426.md)*
   *Описание: Восстановление окружения. Починены тесты. Фикс conftest.py, engine.dispose, безопасный Room ID. Полный деплой VPS, SSL, DNS настроены.*
@@ -80,9 +80,9 @@
 
 ## 🔥 Future Roadmap (Масштабное видение)
 
-- [x] **Трек: Полное переименование проекта (PopyCast -> DubTab)**
+- [x] **Трек: Полное переименование проекта (PopyCast -> ClayTablet)**
   *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-04)*
-  *Ссылка: [./tracks/rename_to_dubtab.md](./tracks/rename_to_dubtab.md)*
+  *Ссылка: [./tracks/rename_to_claytablet.md](./tracks/rename_to_claytablet.md)*
   *Описание: Безопасное переименование корневых папок, docker volumes, бэкенд роутов и файлов баз данных для устранения путаницы в названиях.*
 
 - [x] **Трек: Настольное приложение (Desktop App)**
@@ -103,7 +103,7 @@
 - [x] **Трек: Мобильное приложение — Expo (Gemini CLI Pro)**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
   *Ссылка: [./tracks/mobile_app_gemini_20260506.md](./tracks/mobile_app_gemini_20260506.md)*
-  *GitHub: https://github.com/Goodspoken/dubtab-mobile*
+  *GitHub: https://github.com/claytablet/claytablet-mobile*
   *Описание: React Native + Expo SDK 54, Expo Router v6, managed workflow. HomeScreen (ввод ID, история 8 комнат, QR-сканер), BoardScreen (FlatList + WebSocket + кэш offline), BottomBar (текст/фото/аудио), TextCard/ImageCard/AudioCard, Settings. Ревью выполнено Claude Code — исправлен adaptive-icon, версия 0.2.0, кнопка Save в Settings. Запущено тестирование через `npx expo start`.*
 
 - [ ] **Трек: AI и Agentic интеграция (Умный холст)**
@@ -175,14 +175,14 @@
 
   **Почему не форки:** форки разбивают комьюнити. Один репо с хорошим governance — как Vite, n8n, Shadcn.
 
-- [x] **Трек: Терминал CLI (`dubtab`)**
+- [x] **Трек: Терминал CLI (`claytablet`)**
   *Приоритет: 🟡 Долгосрочно* *(завершено ✅ 2026-04-28)*
   
-  Go-бинарник `dubtab`: ls, send, copy/cp, show, rm, clear, watch, room, rooms, new, me, login, logout, config. Алиасы в стиле shell. Задеплоен на Serverbook. TUI (интерактивная доска в терминале) — следующий шаг.*
+  Go-бинарник `claytablet`: ls, send, copy/cp, show, rm, clear, watch, room, rooms, new, me, login, logout, config. Алиасы в стиле shell. Задеплоен на Serverbook. TUI (интерактивная доска в терминале) — следующий шаг.*
 
 - [x] **Трек: TUI — интерактивная доска в терминале**
   *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-04)*
-  *Описание: `dubtab tui` — живая доска прямо в терминале (bubbletea + lipgloss). Список записей, навигация стрелками, Enter — копировать, d — удалить, WS-стрим в реальном времени.*
+  *Описание: `claytablet tui` — живая доска прямо в терминале (bubbletea + lipgloss). Список записей, навигация стрелками, Enter — копировать, d — удалить, WS-стрим в реальном времени.*
 
 ---
 
@@ -194,11 +194,11 @@
 
 - [x] **Трек: Desktop UX-фиксы v0.2.x + Навигация по комнатам**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-07)*
-  *Описание: Исправлены 6 критических проблем десктопа: реактивный переключатель языка (`useSyncExternalStore`), реактивная тема (`useTheme` hook), иконка-шестерёнка в Settings, версия приложения через `getVersion()` API, удалён orphan `BottomBar.tsx`, `verify_chat_access` для публичных readonly-комнат. Поле «Перейти в комнату» добавлено в дропдаун меню веб-фронтенда. Задеплоено на dubtab.app.*
+  *Описание: Исправлены 6 критических проблем десктопа: реактивный переключатель языка (`useSyncExternalStore`), реактивная тема (`useTheme` hook), иконка-шестерёнка в Settings, версия приложения через `getVersion()` API, удалён orphan `BottomBar.tsx`, `verify_chat_access` для публичных readonly-комнат. Поле «Перейти в комнату» добавлено в дропдаун меню веб-фронтенда. Задеплоено на claytablet.online.*
 
-- [x] **Трек: Ребрендинг DubTab → ClayTablet + домен claytablet.online**
+- [x] **Трек: Ребрендинг ClayTablet → ClayTablet + домен claytablet.online**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-17)*
-  *Ссылка: [./tracks/rebranding_dubtab_20260512.md](./tracks/rebranding_dubtab_20260512.md)*
+  *Ссылка: [./tracks/rebranding_claytablet_20260512.md](./tracks/rebranding_claytablet_20260512.md)*
   *Описание: Возврат к оригинальному бренду ClayTablet. Домен claytablet.online. Логотип из claytab.png → PNG иконки (512/192/180/32px) в PWA. Переезд на Clouvider UK VPS (213.255.246.146). CLI hardening: atotto/clipboard + go-keyring + context.Context + exponential backoff. RSS Auto-Post Plugin. 189 файлов в одном коммите f3e67c1.*
 
 - [x] **Трек: Canvas — Undo/Redo + текст + фигуры**
@@ -213,12 +213,12 @@
 - [x] **Трек: PWA Share Target — Шаринг с телефона в доску**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-11)*
   *Ссылка: [./tracks/pwa_share_target_20260511.md](./tracks/pwa_share_target_20260511.md)*
-  *Описание: Web Share Target API — DubTab появляется в системном меню «Поделиться» на Android/iOS. Service Worker перехватывает POST, кладёт файлы во временный Cache API, редиректит на `/share?key=...`. Страница `SharePage` показывает превью и список последних комнат. Поддержка: фото, аудио, файлы, текст, ссылки. Задеплоено на dubtab.app.*
+  *Описание: Web Share Target API — ClayTablet появляется в системном меню «Поделиться» на Android/iOS. Service Worker перехватывает POST, кладёт файлы во временный Cache API, редиректит на `/share?key=...`. Страница `SharePage` показывает превью и список последних комнат. Поддержка: фото, аудио, файлы, текст, ссылки. Задеплоено на claytablet.online.*
 
 - [x] **Трек: Plugin Engine — Ядро системы плагинов**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-08)*
   *Ссылка: [./tracks/plugin_engine_20260508.md](./tracks/plugin_engine_20260508.md)*
-  *Описание: Движок плагинов без изоляции для self-hosted пользователей. Установка: папка в `plugins/` + рестарт. `plugin_manager.py` + `plugin_sdk.py`. Хуки: `on_startup/shutdown`, `on_text_added`, `on_image_added`, `on_item_deleted`, `on_room_created`, `@scheduled(cron)`, `@http.get/post`. APScheduler для cron. Эндпоинты `/api/plugins`, `/api/plugins/{id}/config`. CLI-команды `dubtab plugin list/config/call`. TUI: режим плагинов (`p`). Веб: секция Плагины в Settings.*
+  *Описание: Движок плагинов без изоляции для self-hosted пользователей. Установка: папка в `plugins/` + рестарт. `plugin_manager.py` + `plugin_sdk.py`. Хуки: `on_startup/shutdown`, `on_text_added`, `on_image_added`, `on_item_deleted`, `on_room_created`, `@scheduled(cron)`, `@http.get/post`. APScheduler для cron. Эндпоинты `/api/plugins`, `/api/plugins/{id}/config`. CLI-команды `claytablet plugin list/config/call`. TUI: режим плагинов (`p`). Веб: секция Плагины в Settings.*
 
 - [x] **Трек: RSS Auto-Post Plugin — Первый встроенный плагин**
   *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-17)*
@@ -250,4 +250,13 @@
 - [x] **Трек: Переезд на Clouvider UK VPS**
   *Приоритет: 🔴 Высокий* *(завершён ✅ 2026-05-17)*
   *Описание: Миграция с VPS `109.120.134.188` на Clouvider UK `213.255.246.146`. Архитектура: host-level Caddy (gsk-caddy) как единый reverse proxy, ClayTablet backend в `docker-compose.clouvider.yml` на порту 8777. Фронтенд собирается через Node.js 20 и отдаётся Caddy как static files. SSH hardening: порт 2203, пользователь `illz`. Clouvider VPS документирован в `clouvider.md`. DNS на `claytablet.online` ожидает propagation.*
+
+---
+
+## 🧪 Качество и тестирование
+
+- [x] **Трек: E2E QA-боты для всех клиентов**
+  *Приоритет: 🟡 Средний* *(завершён ✅ 2026-05-18)*
+  *Ссылка: [./tracks/qa_bots_20260518.md](./tracks/qa_bots_20260518.md)*
+  *Описание: Пять Playwright/pytest наборов в `qa/{web,cli,tui,mobile_web,desktop}/` под общим harness'ом. 54 теста, 51 passed + 3 skip (нет Tauri-билда), ~66 с. Нашли и исправили: устаревший `cli/claytab` бинарник шёл по `/api/claytablet/...` вместо `/api/claytablet/...`, AuthModal не реагировал на Escape, desktop/index.html всё ещё имел дефолтный Tauri-template title.*
 

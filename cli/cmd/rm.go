@@ -10,9 +10,9 @@ import (
 var rmCmd = &cobra.Command{
 	Use:   "rm <номер или id>",
 	Short: "Удалить запись из комнаты",
-	Example: `  dubtab rm 3              # по порядковому номеру из ls
-  dubtab rm a1b2c3d4       # по префиксу ID
-  dubtab rm 3 --yes        # без подтверждения`,
+	Example: `  claytablet rm 3              # по порядковому номеру из ls
+  claytablet rm a1b2c3d4       # по префиксу ID
+  claytablet rm 3 --yes        # без подтверждения`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		yes, _ := cmd.Flags().GetBool("yes")

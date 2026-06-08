@@ -10,8 +10,8 @@ import (
 var clearCmd = &cobra.Command{
 	Use:   "clear",
 	Short: "Очистить всю комнату",
-	Example: `  dubtab clear
-  dubtab clear --yes   # без подтверждения`,
+	Example: `  claytablet clear
+  claytablet clear --yes   # без подтверждения`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		yes, _ := cmd.Flags().GetBool("yes")
 

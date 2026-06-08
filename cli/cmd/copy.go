@@ -12,10 +12,10 @@ var copyCmd = &cobra.Command{
 	Use:     "copy [номер или id]",
 	Aliases: []string{"cp"},
 	Short:   "Скопировать текст в буфер обмена",
-	Example: `  dubtab copy          # последняя запись
-  dubtab copy 10       # запись №10 из ls
-  dubtab copy a1b2c3   # по префиксу ID
-  dubtab copy --last 2 # вторая с конца`,
+	Example: `  claytablet copy          # последняя запись
+  claytablet copy 10       # запись №10 из ls
+  claytablet copy a1b2c3   # по префиксу ID
+  claytablet copy --last 2 # вторая с конца`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data, err := client.GetRoom(cmd.Context())
@@ -50,7 +50,7 @@ var copyCmd = &cobra.Command{
 		}
 
 		if err := CopyToClipboard(text); err != nil {
-			return fmt.Errorf("не удалось скопировать: %w\n  Попробуй: dubtab show <номер>", err)
+			return fmt.Errorf("не удалось скопировать: %w\n  Попробуй: claytablet show <номер>", err)
 		}
 
 		preview := strings.ReplaceAll(text, "\n", "↵ ")

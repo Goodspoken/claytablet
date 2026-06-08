@@ -1,19 +1,19 @@
-$VPS_IP = "109.120.134.188"
-$VPS_USER = "admin"
-$REMOTE_DIR = "/opt/dubtab"
+$VPS_IP = "213.255.246.146"
+$VPS_USER = "illz"
+$REMOTE_DIR = "/home/illz/claytablet"
 $LOCAL_DIR = "./"
 
 Write-Host "=========================================" -ForegroundColor Cyan
-Write-Host " Deploying DubTab to VPS ($VPS_IP)" -ForegroundColor Cyan
+Write-Host " Deploying ClayTablet to VPS ($VPS_IP)" -ForegroundColor Cyan
 Write-Host "=========================================" -ForegroundColor Cyan
 
 Write-Host "Syncing files..." -ForegroundColor Yellow
 # Using scp fallback as rsync might be missing on Windows host
-scp -P 2202 -i $HOME/.ssh/id_rsa -r ./* ${VPS_USER}@${VPS_IP}:${REMOTE_DIR}
+scp -P 2203 -i $HOME/.ssh/id_ed25519 -r ./* ${VPS_USER}@${VPS_IP}:${REMOTE_DIR}
 
 Write-Host "Restarting Docker containers on VPS..." -ForegroundColor Yellow
-ssh -p 2202 -i $HOME/.ssh/id_rsa -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_IP} "cd $REMOTE_DIR && docker compose up -d --build"
+ssh -p 2203 -i $HOME/.ssh/id_ed25519 -o StrictHostKeyChecking=no ${VPS_USER}@${VPS_IP} "cd $REMOTE_DIR && docker compose up -d --build"
 
 Write-Host "Done!" -ForegroundColor Green
-Write-Host "Frontend: https://dubtab.app" -ForegroundColor Green
+Write-Host "Frontend: https://claytablet.online" -ForegroundColor Green
 Write-Host "Backend:  http://${VPS_IP}:8555" -ForegroundColor Green

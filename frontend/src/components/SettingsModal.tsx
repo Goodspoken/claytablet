@@ -269,7 +269,7 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
               <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-3">
                 {usingCustomServer
                   ? (lang === 'RU' ? `Подключён к: ${getBaseUrl()}` : `Connected to: ${getBaseUrl()}`)
-                  : (lang === 'RU' ? 'Облачный сервер dubtab.app (по умолчанию)' : 'Cloud server dubtab.app (default)')}
+                  : (lang === 'RU' ? 'Облачный сервер claytablet.online (по умолчанию)' : 'Cloud server claytablet.online (default)')}
               </p>
               <div className="flex gap-2">
                 <input
@@ -304,7 +304,7 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
                   onClick={() => { clearCustomServer(); setUsingCustomServer(false); setCustomServerInput(''); window.location.reload(); }}
                   className="mt-2 text-xs text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium"
                 >
-                  {lang === 'RU' ? '← Вернуться на dubtab.app' : '← Back to dubtab.app'}
+                  {lang === 'RU' ? '← Вернуться на claytablet.online' : '← Back to claytablet.online'}
                 </button>
               )}
             </div>
@@ -322,8 +322,8 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 mb-3">
                     {lang === 'RU'
-                      ? 'Используй этот токен для входа в dubtab на любом устройстве.'
-                      : 'Use this token to log in with dubtab on any device.'}
+                      ? 'Используй этот токен для входа в claytablet на любом устройстве.'
+                      : 'Use this token to log in with claytablet on any device.'}
                   </p>
                   <div className="flex gap-2 items-center">
                     <code className="flex-1 min-w-0 px-3 py-2 text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg font-mono truncate border border-slate-200 dark:border-slate-700 select-all">
@@ -342,7 +342,7 @@ export function SettingsModal({ isOpen, currentSettings, onClose, onClearAll, on
                     </button>
                   </div>
                   <p className="text-xs text-slate-400 dark:text-slate-500 mt-2 font-mono">
-                    dubtab config --token &lt;токен&gt;
+                    claytablet config --token &lt;токен&gt;
                   </p>
                 </div>
               </div>

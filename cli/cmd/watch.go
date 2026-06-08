@@ -12,8 +12,8 @@ import (
 var watchCmd = &cobra.Command{
 	Use:   "watch",
 	Short: "Следить за комнатой в реальном времени (WebSocket)",
-	Example: `  dubtab watch              # только новые записи
-  dubtab watch --all        # показать всё + слушать новое`,
+	Example: `  claytablet watch              # только новые записи
+  claytablet watch --all        # показать всё + слушать новое`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		showAll, _ := cmd.Flags().GetBool("all")
 

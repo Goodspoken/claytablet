@@ -1,0 +1,13 @@
+# https://claytablet.online — public landing only
+User-agent: *
+Allow: /$
+Allow: /terms
+Allow: /privacy
+
+# Rooms are accessed by random short IDs and contain ephemeral user content.
+# Block crawling of arbitrary room URLs and API endpoints.
+Disallow: /api/
+Disallow: /share
+Disallow: /assets/
+
+Sitemap: https://claytablet.online/sitemap.xml

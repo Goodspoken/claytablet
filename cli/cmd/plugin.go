@@ -13,21 +13,21 @@ import (
 var pluginCmd = &cobra.Command{
 	Use:   "plugin",
 	Short: "Управление плагинами сервера",
-	Long: `Управление плагинами DubTab на сервере.
+	Long: `Управление плагинами ClayTablet на сервере.
 
 ИСПОЛЬЗОВАНИЕ:
-  dubtab plugin list                     список всех плагинов
-  dubtab plugin config <id>              показать конфиг плагина
-  dubtab plugin config <id> --set '{}'   сохранить конфиг (JSON)
-  dubtab plugin call <id> <path>         вызвать эндпоинт плагина
-  dubtab plugin call <id> <path> --method POST --body '{}'
+  claytablet plugin list                     список всех плагинов
+  claytablet plugin config <id>              показать конфиг плагина
+  claytablet plugin config <id> --set '{}'   сохранить конфиг (JSON)
+  claytablet plugin call <id> <path>         вызвать эндпоинт плагина
+  claytablet plugin call <id> <path> --method POST --body '{}'
 
 ПРИМЕРЫ:
-  dubtab plugin list
-  dubtab plugin config rss-fetcher
-  dubtab plugin config rss-fetcher --set '{"feeds":[]}'
-  dubtab plugin call rss-fetcher status
-  dubtab plugin call rss-fetcher config --method POST --body '{"feeds":[]}'`,
+  claytablet plugin list
+  claytablet plugin config rss-fetcher
+  claytablet plugin config rss-fetcher --set '{"feeds":[]}'
+  claytablet plugin call rss-fetcher status
+  claytablet plugin call rss-fetcher config --method POST --body '{"feeds":[]}'`,
 }
 
 // plugin list
@@ -114,9 +114,9 @@ var pluginCallCmd = &cobra.Command{
 Path — это часть URL после /api/plugins/{id}/.
 
 ПРИМЕРЫ:
-  dubtab plugin call rss-fetcher status
-  dubtab plugin call rss-fetcher config
-  dubtab plugin call rss-fetcher run --method POST --body '{"feed":"https://..."}'`,
+  claytablet plugin call rss-fetcher status
+  claytablet plugin call rss-fetcher config
+  claytablet plugin call rss-fetcher run --method POST --body '{"feed":"https://..."}'`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pluginID := args[0]

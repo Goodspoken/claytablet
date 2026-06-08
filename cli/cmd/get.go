@@ -19,10 +19,10 @@ var getCmd = &cobra.Command{
 	Use:     "get",
 	Aliases: []string{"ls"},
 	Short:   "Получить содержимое комнаты",
-	Example: `  dubtab ls
-  dubtab ls --last 5
-  dubtab ls --full              # показать полный текст каждой заметки
-  dubtab ls --last 1 --raw | xclip -sel clip  # скопировать последний текст`,
+	Example: `  claytablet ls
+  claytablet ls --last 5
+  claytablet ls --full              # показать полный текст каждой заметки
+  claytablet ls --last 1 --raw | xclip -sel clip  # скопировать последний текст`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data, err := client.GetRoom(cmd.Context())
 		if err != nil {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Goodspoken/dubtab/cli/api"
+	"github.com/claytablet/claytablet/cli/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -12,13 +12,13 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new [id]",
 	Short: "Создать новую комнату и переключиться на неё",
-	Example: `  dubtab new               # случайный ID
-  dubtab new my-room       # конкретный ID`,
+	Example: `  claytablet new               # случайный ID
+  claytablet new my-room       # конкретный ID`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	RunE: func(cmd *cobra.Command, args []string) error {
 		server := viper.GetString("server")
 		if server == "" {
-			server = "https://dubtab.app"
+			server = "https://claytablet.online"
 		}
 
 		var roomID string

@@ -6,8 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -116,7 +119,7 @@ func (c *Client) do(req *http.Request, out any) error {
 
 // GetRoom возвращает все элементы комнаты
 func (c *Client) GetRoom(ctx context.Context) (*RoomData, error) {
-	req, err := c.newRequest(ctx, "GET", "/api/dubtab/"+c.Room, nil)
+	req, err := c.newRequest(ctx, "GET", "/api/claytablet/"+c.Room, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +129,7 @@ func (c *Client) GetRoom(ctx context.Context) (*RoomData, error) {
 
 // SendText отправляет текст в комнату
 func (c *Client) SendText(ctx context.Context, content string) (*Item, error) {
-	req, err := c.newRequest(ctx, "POST", "/api/dubtab/"+c.Room+"/text",
+	req, err := c.newRequest(ctx, "POST", "/api/claytablet/"+c.Room+"/text",
 		map[string]string{"content": content})
 	if err != nil {
 		return nil, err
@@ -135,9 +138,82 @@ func (c *Client) SendText(ctx context.Context, content string) (*Item, error) {
 	return &item, c.do(req, &item)
 }
 
+// UploadFile загружает файл на сервер
+func (c *Client) UploadFile(ctx context.Context, filePath string) (*Item, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("ошибка открытия файла: %w", err)
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("file", filepath.Base(filePath))
+	if err != nil {
+		return nil, err
+	}
+	if _, err := io.Copy(part, file); err != nil {
+		return nil, err
+	}
+	if err := writer.Close(); err != nil {
+		return nil, err
+	}
+
+	ext := strings.ToLower(filepath.Ext(filePath))
+	endpointType := "file"
+	switch ext {
+	case ".png", ".jpg", ".jpeg", ".gif", ".webp":
+		endpointType = "image"
+	case ".mp3", ".wav", ".ogg", ".webm":
+		endpointType = "audio"
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", c.BaseURL+"/api/claytablet/"+c.Room+"/"+endpointType, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	if c.Password != "" {
+		req.Header.Set("X-Room-Password", c.Password)
+	}
+	if c.Token != "" {
+		req.Header.Set("Authorization", "Bearer "+c.Token)
+	}
+
+	var item Item
+	return &item, c.do(req, &item)
+}
+
+// DownloadFile скачивает файл с сервера
+func (c *Client) DownloadFile(ctx context.Context, itemURL, destPath string) error {
+	req, err := c.newRequest(ctx, "GET", itemURL, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return fmt.Errorf("ошибка запроса: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("ошибка сервера: %s", resp.Status)
+	}
+
+	out, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("ошибка создания файла: %w", err)
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
 // DeleteItem удаляет элемент по ID
 func (c *Client) DeleteItem(ctx context.Context, itemID string) error {
-	req, err := c.newRequest(ctx, "DELETE", "/api/dubtab/"+c.Room+"/"+itemID, nil)
+	req, err := c.newRequest(ctx, "DELETE", "/api/claytablet/"+c.Room+"/"+itemID, nil)
 	if err != nil {
 		return err
 	}
@@ -146,7 +222,7 @@ func (c *Client) DeleteItem(ctx context.Context, itemID string) error {
 
 // ClearRoom удаляет все элементы комнаты
 func (c *Client) ClearRoom(ctx context.Context) error {
-	req, err := c.newRequest(ctx, "DELETE", "/api/dubtab/"+c.Room+"/all", nil)
+	req, err := c.newRequest(ctx, "DELETE", "/api/claytablet/"+c.Room+"/all", nil)
 	if err != nil {
 		return err
 	}

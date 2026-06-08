@@ -5,33 +5,34 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Goodspoken/dubtab/cli/api"
+	"github.com/claytablet/claytablet/cli/api"
 )
 
 type listEntry struct {
 	id      string
 	kind    string
 	content string
+	item    *api.Item
 }
 
 // allItems собирает все элементы комнаты в плоский список (тот же порядок, что ls).
 func allItems(data *api.RoomData) []listEntry {
 	var all []listEntry
-	for _, t := range data.Texts {
-		all = append(all, listEntry{t.ID, "TEXT", t.Content})
+	for i := range data.Texts {
+		all = append(all, listEntry{data.Texts[i].ID, "TEXT", data.Texts[i].Content, &data.Texts[i]})
 	}
-	for _, img := range data.Images {
-		name := img.Filename
+	for i := range data.Images {
+		name := data.Images[i].Filename
 		if name == "" {
-			name = img.URL
+			name = data.Images[i].URL
 		}
-		all = append(all, listEntry{img.ID, "IMG ", name})
+		all = append(all, listEntry{data.Images[i].ID, "IMG ", name, &data.Images[i]})
 	}
-	for _, a := range data.Audios {
-		all = append(all, listEntry{a.ID, "AUD ", a.URL})
+	for i := range data.Audios {
+		all = append(all, listEntry{data.Audios[i].ID, "AUD ", data.Audios[i].URL, &data.Audios[i]})
 	}
-	for _, f := range data.Files {
-		all = append(all, listEntry{f.ID, "FILE", f.Filename})
+	for i := range data.Files {
+		all = append(all, listEntry{data.Files[i].ID, "FILE", data.Files[i].Filename, &data.Files[i]})
 	}
 	return all
 }

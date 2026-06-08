@@ -12,8 +12,13 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
+TARGETVPS_IP="213.255.246.146"
+VPS_USER="illz"
+VPS_PORT="2203"
+REMOTE_DIR="/home/illz/claytablet"
+SSH_KEY="~/.ssh/id_ed25519"
 TARGET="$1"
-APP_NAME="dubtab"
+APP_NAME="claytablet"
 REMOTE_DIR="/opt/$APP_NAME"
 LOCAL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 

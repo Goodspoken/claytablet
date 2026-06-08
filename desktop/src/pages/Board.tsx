@@ -33,7 +33,7 @@ export default function Board() {
   const { isConnected } = useWebSocket({ roomId, onSync: fetchData });
   const { t } = useI18n();
   useTheme(); // ensure theme is applied/synced on this page
-  const [baseUrl, setBaseUrl] = useState('https://dubtab.app');
+  const [baseUrl, setBaseUrl] = useState('https://claytablet.online');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showRoomMenu, setShowRoomMenu] = useState(false);
@@ -68,7 +68,7 @@ export default function Board() {
       const preview = newest.type === 'text'
         ? (newest.content ?? '').slice(0, 80)
         : `Новый ${newest.type === 'image' ? 'файл изображения' : newest.type}`;
-      void sendNotification({ title: `DubTab — ${roomId}`, body: preview });
+      void sendNotification({ title: `ClayTablet — ${roomId}`, body: preview });
     }
     setLastItemCount(items.length);
   // eslint-disable-next-line react-hooks/exhaustive-deps

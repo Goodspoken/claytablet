@@ -12,11 +12,11 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = useState<Language>(() => {
-    return (localStorage.getItem('dubtab_lang') as Language) || 'RU';
+    return (localStorage.getItem('claytablet_lang') as Language) || 'RU';
   });
 
   const setLang = (newLang: Language) => {
-    localStorage.setItem('dubtab_lang', newLang);
+    localStorage.setItem('claytablet_lang', newLang);
     setLangState(newLang);
   };
 

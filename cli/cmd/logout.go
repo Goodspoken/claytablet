@@ -14,17 +14,17 @@ var logoutCmd = &cobra.Command{
 	Short: "Выйти из аккаунта (удалить токен)",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error { return nil },
 	RunE: func(cmd *cobra.Command, args []string) error {
-		token, err := keyring.Get("dubtab", "token")
+		_, err := keyring.Get("claytablet", "token")
 		if err != nil && viper.GetString("token") == "" {
 			fmt.Println("Ты и так не авторизован.")
 			return nil
 		}
 
-		keyring.Delete("dubtab", "token")
+		keyring.Delete("claytablet", "token")
 		viper.Set("token", "")
 		if err := viper.WriteConfig(); err != nil {
 			home, _ := os.UserHomeDir()
-			viper.WriteConfigAs(home + "/.config/dubtab.toml")
+			viper.WriteConfigAs(home + "/.config/claytablet.toml")
 		}
 
 		fmt.Println("✓ Токен удалён. До свидания!")

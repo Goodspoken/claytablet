@@ -1,5 +1,5 @@
 """
-DubTab Plugin Manager
+ClayTablet Plugin Manager
 
 Scans the plugins/ directory on startup, loads each plugin.py module,
 registers hooks/schedules/routes, and fires hooks at runtime.
@@ -18,7 +18,7 @@ import os
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-logger = logging.getLogger("dubtab.plugins")
+logger = logging.getLogger("claytablet.plugins")
 
 
 class PluginManager:
@@ -86,7 +86,7 @@ class PluginManager:
             plugin_sdk._set_context(self, plugin_id)
 
             spec = importlib.util.spec_from_file_location(
-                f"dubtab_plugin_{plugin_id}", plugin_path
+                f"claytablet_plugin_{plugin_id}", plugin_path
             )
             mod = importlib.util.module_from_spec(spec)  # type: ignore[arg-type]
             spec.loader.exec_module(mod)  # type: ignore[union-attr]
@@ -189,7 +189,7 @@ class PluginManager:
         def _require_admin(request: Request) -> str:
             """Ensure caller is authenticated and (if PLUGIN_ADMINS set) is an admin."""
             from auth import get_current_user_id_sync
-            token = request.cookies.get("dubtab_token")
+            token = request.cookies.get("claytablet_token")
             auth_header = request.headers.get("Authorization", "")
             if auth_header.startswith("Bearer "):
                 token = auth_header.split(" ", 1)[1]

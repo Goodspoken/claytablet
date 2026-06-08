@@ -10,10 +10,10 @@ export default function TermsPage() {
         
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">1. Acceptance of Terms</h2>
-          <p>By using DubTab, you agree to these terms. If you do not agree, please do not use the service.</p>
-          
+          <p>By using ClayTablet, you agree to these terms. If you do not agree, please do not use the service.</p>
+
           <h2 className="text-xl font-semibold">2. Ephemeral Nature</h2>
-          <p>You understand that DubTab is designed for ephemeral data sharing. Content is not stored permanently and will be deleted after room expiration.</p>
+          <p>You understand that ClayTablet is designed for ephemeral data sharing. Content is not stored permanently and will be deleted after room expiration.</p>
           
           <h2 className="text-xl font-semibold">3. Prohibited Content</h2>
           <p>Users are prohibited from uploading illegal content, malware, or any content that violates the rights of others.</p>

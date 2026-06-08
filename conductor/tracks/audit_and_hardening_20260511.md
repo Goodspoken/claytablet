@@ -3,7 +3,7 @@
 **Статус:** ✅ Завершён  
 **Приоритет:** 🔴 Высокий  
 **Дата создания:** 2026-05-11  
-**Задеплоено:** 2026-05-11 на dubtab.app
+**Задеплоено:** 2026-05-11 на claytablet.online
 
 ---
 
@@ -52,7 +52,7 @@ DSN был прямо в `main.tsx` — попадал в JS-бандл и в gi
 `/api/plugins/PLUGIN_API.md` отдавал 404 — бэкенд не сервит этот файл. Ссылка переведена на GitHub.
 
 **#6. Service Worker cache рос бесконечно**  
-`dubtab-share-v1` копил данные шаров без чистки. Добавлен TTL 10 минут (purge перед каждым новым шаром по timestamp-prefix ключа) + ручной `postMessage({type: 'purge-share'})` от `SharePage` после успешной отправки.
+`claytablet-share-v1` копил данные шаров без чистки. Добавлен TTL 10 минут (purge перед каждым новым шаром по timestamp-prefix ключа) + ручной `postMessage({type: 'purge-share'})` от `SharePage` после успешной отправки.
 
 [frontend/public/sw.js](frontend/public/sw.js)
 

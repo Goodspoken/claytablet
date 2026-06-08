@@ -1,0 +1,6 @@
+playwright>=1.49.0
+pytest>=8.3.0
+pytest-playwright>=0.6.0
+pytest-html>=4.1.0
+requests>=2.32.0
+pexpect>=4.9.0

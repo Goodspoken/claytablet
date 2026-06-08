@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Goodspoken/dubtab/cli/api"
+	"github.com/claytablet/claytablet/cli/api"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/zalando/go-keyring"
@@ -17,43 +17,43 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "dubtab",
-	Short: "DubTab CLI — обмен буфером обмена из терминала",
-	Long: `dubtab — DubTab из терминала
+	Use:   "claytablet",
+	Short: "ClayTablet CLI — обмен буфером обмена из терминала",
+	Long: `claytablet — ClayTablet из терминала
 
 КОМНАТА:
-  dubtab room                   текущая комната
-  dubtab room <id>              переключиться
-  dubtab new [id]               создать новую
-  dubtab rooms                  список твоих комнат (нужен логин)
+  claytablet room                   текущая комната
+  claytablet room <id>              переключиться
+  claytablet new [id]               создать новую
+  claytablet rooms                  список твоих комнат (нужен логин)
 
 КОНТЕНТ:
-  dubtab ls                     список записей
-  dubtab ls --last 5            последние 5
-  dubtab send "текст"           отправить текст
-  cat file | dubtab send        отправить через пайп
-  dubtab copy                   скопировать последнее в буфер
-  dubtab show <id>              полный текст по ID
-  dubtab rm <id>                удалить запись
-  dubtab clear                  очистить комнату
+  claytablet ls                     список записей
+  claytablet ls --last 5            последние 5
+  claytablet send "текст"           отправить текст
+  cat file | claytablet send        отправить через пайп
+  claytablet copy                   скопировать последнее в буфер
+  claytablet show <id>              полный текст по ID
+  claytablet rm <id>                удалить запись
+  claytablet clear                  очистить комнату
 
 СТРИМ:
-  dubtab watch                  следить в реальном времени
-  dubtab tui                    открыть интерактивную доску (TUI)
+  claytablet watch                  следить в реальном времени
+  claytablet tui                    открыть интерактивную доску (TUI)
 
 АККАУНТ:
-  dubtab login                  войти через браузер
-  dubtab logout                 выйти
-  dubtab me                     кто я
+  claytablet login                  войти через браузер
+  claytablet logout                 выйти
+  claytablet me                     кто я
 
 ПЛАГИНЫ:
-  dubtab plugin list                     список плагинов сервера
-  dubtab plugin config <id>              конфиг плагина
-  dubtab plugin config <id> --set '{}'   сохранить конфиг
-  dubtab plugin call <id> <path>         вызвать эндпоинт плагина
+  claytablet plugin list                     список плагинов сервера
+  claytablet plugin config <id>              конфиг плагина
+  claytablet plugin config <id> --set '{}'   сохранить конфиг
+  claytablet plugin call <id> <path>         вызвать эндпоинт плагина
 
 КОНФИГ:
-  dubtab config --server https://dubtab.app --room my-room`,
+  claytablet config --server https://claytablet.online --room my-room`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		// Не нужен клиент для config команды
 		if cmd.Name() == "config" {
@@ -63,21 +63,21 @@ var rootCmd = &cobra.Command{
 		server := viper.GetString("server")
 		room := viper.GetString("room")
 		if server == "" {
-			return fmt.Errorf("сервер не задан. Запусти: dubtab config --server https://dubtab.app --room my-room")
+			return fmt.Errorf("сервер не задан. Запусти: claytablet config --server https://claytablet.online --room my-room")
 		}
 		if room == "" {
-			return fmt.Errorf("комната не задана. Запусти: dubtab config --room my-room")
+			return fmt.Errorf("комната не задана. Запусти: claytablet config --room my-room")
 		}
 
 		password := viper.GetString("password")
 		if password == "" {
-			if p, err := keyring.Get("dubtab", "password"); err == nil {
+			if p, err := keyring.Get("claytablet", "password"); err == nil {
 				password = p
 			}
 		}
 		token := viper.GetString("token")
 		if token == "" {
-			if t, err := keyring.Get("dubtab", "token"); err == nil {
+			if t, err := keyring.Get("claytablet", "token"); err == nil {
 				token = t
 			}
 		}
@@ -96,8 +96,8 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "конфиг файл (по умолчанию ~/.config/dubtab.toml)")
-	rootCmd.PersistentFlags().String("server", "", "URL сервера (например, https://dubtab.app)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "конфиг файл (по умолчанию ~/.config/claytablet.toml)")
+	rootCmd.PersistentFlags().String("server", "", "URL сервера (например, https://claytablet.online)")
 	rootCmd.PersistentFlags().String("room", "", "ID комнаты")
 	rootCmd.PersistentFlags().String("password", "", "пароль комнаты (если защищена)")
 	rootCmd.PersistentFlags().String("token", "", "JWT токен для личных комнат")
@@ -117,11 +117,11 @@ func initConfig() {
 			viper.AddConfigPath(filepath.Join(home, ".config"))
 			viper.AddConfigPath(home)
 		}
-		viper.SetConfigName("dubtab")
+		viper.SetConfigName("claytablet")
 		viper.SetConfigType("toml")
 	}
 
-	viper.SetEnvPrefix("DUBTAB")
+	viper.SetEnvPrefix("CLAYTAB")
 	viper.AutomaticEnv()
 
 	viper.ReadInConfig()

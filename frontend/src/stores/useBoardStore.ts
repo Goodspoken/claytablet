@@ -79,7 +79,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   copiedId: null,
   isDragging: false,
   newNote: '',
-  username: localStorage.getItem('dubtab_username') || '',
+  username: localStorage.getItem('claytablet_username') || '',
 
   // Modals
   isSettingsOpen: false,
@@ -326,7 +326,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'DubTab',
+          title: 'ClayTablet',
           text: item.type === 'text' ? item.content : undefined,
           url: shareUrl,
         });
@@ -355,7 +355,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
 
   handleSetUsername: (name) => {
     set({ username: name });
-    localStorage.setItem('dubtab_username', name);
+    localStorage.setItem('claytablet_username', name);
   },
 
   handleUpdateSettings: async (settings, showToast, t) => {
@@ -387,6 +387,13 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   },
 
   closeAllModals: () => {
-    set({ isSettingsOpen: false, isQROpen: false, isCanvasOpen: false, isPasswordPromptOpen: false });
+    set({
+      isSettingsOpen: false,
+      isQROpen: false,
+      isCanvasOpen: false,
+      isPasswordPromptOpen: false,
+      isChatOpen: false,
+      isAuthModalOpen: false,
+    });
   },
 }));

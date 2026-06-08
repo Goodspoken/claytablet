@@ -10,9 +10,9 @@ import (
 var showCmd = &cobra.Command{
 	Use:   "show <номер или id>",
 	Short: "Показать полный текст записи",
-	Example: `  dubtab show 1            # первая запись из ls
-  dubtab show 3            # третья запись
-  dubtab show a1b2c3d4    # по префиксу ID`,
+	Example: `  claytablet show 1            # первая запись из ls
+  claytablet show 3            # третья запись
+  claytablet show a1b2c3d4    # по префиксу ID`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		data, err := client.GetRoom(cmd.Context())

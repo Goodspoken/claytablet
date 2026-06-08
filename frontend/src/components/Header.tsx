@@ -142,12 +142,16 @@ export function Header({
         
         {/* Left Side: Logo */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
-            <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 rotate-3 transition-transform shrink-0">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <h1 className="text-xl font-black tracking-tight text-slate-800 dark:text-white hidden sm:block">
-              Clay<span className="text-indigo-600 dark:text-indigo-400">Tablet</span>
+          <div className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => navigate('/')}>
+            <img
+              src="/logo-tablet-192.png"
+              alt="ClayTablet"
+              className="w-11 h-11 drop-shadow-sm shrink-0"
+              width={44}
+              height={44}
+            />
+            <h1 className="text-xl font-black tracking-tight hidden sm:block bg-gradient-to-r from-[#2d1056] via-[#6b3aa0] to-[#3a1e5c] dark:from-[#b58bff] dark:via-[#d4b0ff] dark:to-[#b58bff] bg-clip-text text-transparent">
+              ClayTablet
             </h1>
           </div>
         </div>

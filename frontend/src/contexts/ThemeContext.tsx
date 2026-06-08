@@ -13,7 +13,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem('dubtab_theme') as Theme) || 'light';
+    return (localStorage.getItem('claytablet_theme') as Theme) || 'light';
   });
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       document.documentElement.classList.remove('dark');
     }
-    localStorage.setItem('dubtab_theme', theme);
+    localStorage.setItem('claytablet_theme', theme);
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

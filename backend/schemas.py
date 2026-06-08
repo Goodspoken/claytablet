@@ -1,4 +1,4 @@
-"""Pydantic request schemas for the DubTab API."""
+"""Pydantic request schemas for the ClayTablet API."""
 from typing import Optional
 
 from pydantic import BaseModel, Field

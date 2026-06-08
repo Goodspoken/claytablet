@@ -7,15 +7,27 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from fastapi_sso.sso.google import GoogleSSO
 from fastapi_sso.sso.yandex import YandexSSO
+import logging
 
 import database
 import models
 
+logger = logging.getLogger("claytablet")
+
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
-JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-key-change-me")
+JWT_SECRET = os.getenv("JWT_SECRET", "super-secret-key-change-me-please-use-32-bytes-min")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRATION_DAYS = 30
+
+# HS256 requires a key of at least 32 bytes per RFC 7518; refuse to start with a
+# weak default in production so misconfigured deployments fail loudly.
+if len(JWT_SECRET.encode()) < 32:
+    if os.getenv("ENVIRONMENT", "production") == "production":
+        raise RuntimeError(
+            "JWT_SECRET must be at least 32 bytes long in production "
+            "(generate with: python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+        )
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
@@ -68,7 +80,7 @@ def get_current_user_id(request: Request) -> Optional[str]:
         token = auth_header.split(" ")[1]
     
     if not token:
-        token = request.cookies.get("dubtab_token")
+        token = request.cookies.get("claytablet_token")
 
     if not token:
         return None
@@ -90,51 +102,83 @@ def get_current_user_id_sync(token: str) -> Optional[str]:
 
 @router.get("/google/login")
 async def google_login():
-    with google_sso:
-        return await google_sso.get_login_redirect()
+    try:
+        async with google_sso:
+            return await google_sso.get_login_redirect()
+    except Exception as e:
+        logger.error(f"Google login error: {e}")
+        return RedirectResponse(url="/?error=sso_timeout")
 
 @router.get("/google/callback")
 async def google_callback(request: Request, db: Session = Depends(database.get_db)):
-    with google_sso:
-        user_info = await google_sso.verify_and_process(request)
+    try:
+        async with google_sso:
+            user_info = await google_sso.verify_and_process(request)
+    except Exception as e:
+        logger.error(f"Google callback error: {e}")
+        return RedirectResponse(url="/?error=sso_timeout")
     return handle_sso_login(user_info, "google", db)
 
 @router.get("/yandex/login")
 async def yandex_login():
-    with yandex_sso:
-        return await yandex_sso.get_login_redirect()
+    try:
+        async with yandex_sso:
+            return await yandex_sso.get_login_redirect()
+    except Exception as e:
+        logger.error(f"Yandex login error: {e}")
+        return RedirectResponse(url="/?error=sso_timeout")
 
 @router.get("/yandex/callback")
 async def yandex_callback(request: Request, db: Session = Depends(database.get_db)):
-    with yandex_sso:
-        user_info = await yandex_sso.verify_and_process(request)
+    try:
+        async with yandex_sso:
+            user_info = await yandex_sso.verify_and_process(request)
+    except Exception as e:
+        logger.error(f"Yandex callback error: {e}")
+        return RedirectResponse(url="/?error=sso_timeout")
     return handle_sso_login(user_info, "yandex", db)
 
 @router.get("/google/login/mobile")
 async def google_login_mobile():
-    with google_sso_mobile:
-        return await google_sso_mobile.get_login_redirect()
+    try:
+        async with google_sso_mobile:
+            return await google_sso_mobile.get_login_redirect()
+    except Exception as e:
+        logger.error(f"Google mobile login error: {e}")
+        return RedirectResponse(url="claytablet://auth?error=sso_timeout")
 
 @router.get("/google/callback/mobile")
 async def google_callback_mobile(request: Request, db: Session = Depends(database.get_db)):
-    with google_sso_mobile:
-        user_info = await google_sso_mobile.verify_and_process(request)
+    try:
+        async with google_sso_mobile:
+            user_info = await google_sso_mobile.verify_and_process(request)
+    except Exception as e:
+        logger.error(f"Google mobile callback error: {e}")
+        return RedirectResponse(url="claytablet://auth?error=sso_timeout")
     return handle_sso_login_mobile(user_info, "google", db)
 
 @router.get("/yandex/login/mobile")
 async def yandex_login_mobile():
-    with yandex_sso_mobile:
-        return await yandex_sso_mobile.get_login_redirect()
+    try:
+        async with yandex_sso_mobile:
+            return await yandex_sso_mobile.get_login_redirect()
+    except Exception as e:
+        logger.error(f"Yandex mobile login error: {e}")
+        return RedirectResponse(url="claytablet://auth?error=sso_timeout")
 
 @router.get("/yandex/callback/mobile")
 async def yandex_callback_mobile(request: Request, db: Session = Depends(database.get_db)):
-    with yandex_sso_mobile:
-        user_info = await yandex_sso_mobile.verify_and_process(request)
+    try:
+        async with yandex_sso_mobile:
+            user_info = await yandex_sso_mobile.verify_and_process(request)
+    except Exception as e:
+        logger.error(f"Yandex mobile callback error: {e}")
+        return RedirectResponse(url="claytablet://auth?error=sso_timeout")
     return handle_sso_login_mobile(user_info, "yandex", db)
 
 def handle_sso_login_mobile(user_info, provider: str, db: Session):
     if not user_info:
-        return RedirectResponse(url="dubtab://auth?error=failed")
+        return RedirectResponse(url="claytablet://auth?error=failed")
 
     user_id = f"{provider}_{user_info.id}"
 
@@ -155,7 +199,7 @@ def handle_sso_login_mobile(user_info, provider: str, db: Session):
     db.commit()
 
     token = create_jwt_token(user_id)
-    return RedirectResponse(url=f"dubtab://auth?token={token}&provider={provider}")
+    return RedirectResponse(url=f"claytablet://auth?token={token}&provider={provider}")
 
 def handle_sso_login(user_info, provider: str, db: Session):
     if not user_info:
@@ -182,11 +226,11 @@ def handle_sso_login(user_info, provider: str, db: Session):
     token = create_jwt_token(user_id)
     
     # We redirect to / without the token in the URL for security. 
-    # The frontend reads the httponly cookie 'dubtab_token' (which is already set below)
+    # The frontend reads the httponly cookie 'claytablet_token' (which is already set below)
     # or a regular cookie if we were doing JS reads, but httponly is safer.
     # Actually, the frontend might need to know they logged in, but we can check /api/auth/me
     response = RedirectResponse(url="/")
-    response.set_cookie("dubtab_token", token, max_age=JWT_EXPIRATION_DAYS*24*60*60, httponly=True, samesite="lax")
+    response.set_cookie("claytablet_token", token, max_age=JWT_EXPIRATION_DAYS*24*60*60, httponly=True, samesite="lax")
     return response
 
 @router.get("/me")
@@ -218,19 +262,19 @@ async def get_my_rooms(request: Request, db: Session = Depends(database.get_db))
 @router.post("/logout")
 async def logout():
     response = Response(content='{"status":"ok"}', media_type="application/json")
-    response.delete_cookie("dubtab_token")
+    response.delete_cookie("claytablet_token")
     return response
 
 @router.get("/token")
 async def get_token(request: Request):
     """Возвращает текущий JWT токен — для использования с CLI."""
-    token = request.cookies.get("dubtab_token")
+    token = request.cookies.get("claytablet_token")
     if not token:
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
     if not token:
-        raise HTTPException(status_code=401, detail="Не авторизован. Сначала войди на dubtab.app")
+        raise HTTPException(status_code=401, detail="Не авторизован. Сначала войди на claytablet.online")
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("sub", "")
@@ -239,5 +283,5 @@ async def get_token(request: Request):
     return {
         "token": token,
         "user_id": user_id,
-        "hint": "Скопируй token и вставь в: dubtab config --token <token>"
+        "hint": "Скопируй token и вставь в: claytablet config --token <token>"
     }

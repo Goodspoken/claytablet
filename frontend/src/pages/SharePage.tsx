@@ -161,7 +161,7 @@ export default function SharePage() {
           </button>
           <div>
             <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-              {lang === 'RU' ? 'Отправить в DubTab' : 'Send to DubTab'}
+              {lang === 'RU' ? 'Отправить в ClayTablet' : 'Send to ClayTablet'}
             </h1>
             <p className="text-xs text-slate-400">
               {lang === 'RU' ? 'Выбери комнату' : 'Choose a room'}

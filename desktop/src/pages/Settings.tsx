@@ -11,7 +11,7 @@ import { useTheme } from '../hooks/useTheme';
 export default function Settings({ onClose }: { onClose?: () => void }) {
   const { lang, setLang } = useI18n();
   const { theme, setTheme } = useTheme();
-  const [serverUrl, setServerUrlState] = useState('https://dubtab.app');
+  const [serverUrl, setServerUrlState] = useState('https://claytablet.online');
   const [room, setRoomState] = useState('default');
   const [saved, setSaved] = useState(false);
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'downloading' | 'ready' | 'latest' | 'error'>('idle');
@@ -62,7 +62,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
   const handleRelaunch = () => relaunch();
 
   const handleSave = async () => {
-    await setBaseUrl(serverUrl.trim() || 'https://dubtab.app');
+    await setBaseUrl(serverUrl.trim() || 'https://claytablet.online');
     await setSetting('currentRoom', room.trim() || 'default');
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -87,10 +87,10 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <input
             value={serverUrl}
             onChange={e => setServerUrlState(e.target.value)}
-            placeholder="https://dubtab.app"
+            placeholder="https://claytablet.online"
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-400/50"
           />
-          <p className="text-xs text-slate-400">По умолчанию: https://dubtab.app</p>
+          <p className="text-xs text-slate-400">По умолчанию: https://claytablet.online</p>
         </div>
 
         {/* Current Room */}
@@ -164,7 +164,7 @@ export default function Settings({ onClose }: { onClose?: () => void }) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">Автозапуск при старте</p>
-              <p className="text-xs text-slate-400 mt-0.5">Запускать DubTab вместе с системой</p>
+              <p className="text-xs text-slate-400 mt-0.5">Запускать ClayTablet вместе с системой</p>
             </div>
             {/* TODO: implement with tauri-plugin-autostart */}
             <button

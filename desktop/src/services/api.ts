@@ -8,7 +8,7 @@ const store = new LazyStore('settings.json');
 
 export async function getBaseUrl(): Promise<string> {
   const url = await store.get<string>('serverUrl');
-  return url ?? 'https://dubtab.app';
+  return url ?? 'https://claytablet.online';
 }
 
 export async function setBaseUrl(url: string): Promise<void> {
@@ -60,7 +60,7 @@ export async function fetchClipboard(roomId: string): Promise<{
 }> {
   const base = await getBaseUrl();
   const headers = await authHeaders(roomId);
-  const res = await fetch(`${base}/api/dubtab/${roomId}`, { headers });
+  const res = await fetch(`${base}/api/claytablet/${roomId}`, { headers });
   if (!res.ok) throw new Error(`fetchClipboard: ${res.status}`);
   const data: ClipboardResponse = await res.json();
 
@@ -82,7 +82,7 @@ export async function fetchClipboard(roomId: string): Promise<{
 export async function addText(roomId: string, content: string): Promise<void> {
   const base = await getBaseUrl();
   const headers = { ...(await authHeaders(roomId)), 'Content-Type': 'application/json' };
-  const res = await fetch(`${base}/api/dubtab/${roomId}/text`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/text`, {
     method: 'POST',
     headers,
     body: JSON.stringify({ content }),
@@ -95,7 +95,7 @@ export async function addImage(roomId: string, file: File): Promise<void> {
   const headers = await authHeaders(roomId);
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${base}/api/dubtab/${roomId}/image`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/image`, {
     method: 'POST',
     headers,
     body: form,
@@ -108,7 +108,7 @@ export async function addAudio(roomId: string, file: File): Promise<void> {
   const headers = await authHeaders(roomId);
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${base}/api/dubtab/${roomId}/audio`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/audio`, {
     method: 'POST',
     headers,
     body: form,
@@ -121,7 +121,7 @@ export async function addFile(roomId: string, file: File): Promise<void> {
   const headers = await authHeaders(roomId);
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${base}/api/dubtab/${roomId}/file`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/file`, {
     method: 'POST',
     headers,
     body: form,
@@ -132,7 +132,7 @@ export async function addFile(roomId: string, file: File): Promise<void> {
 export async function deleteItem(roomId: string, itemId: string): Promise<void> {
   const base = await getBaseUrl();
   const headers = await authHeaders(roomId);
-  const res = await fetch(`${base}/api/dubtab/${roomId}/${itemId}`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/${itemId}`, {
     method: 'DELETE',
     headers,
   });
@@ -142,7 +142,7 @@ export async function deleteItem(roomId: string, itemId: string): Promise<void> 
 export async function clearAll(roomId: string): Promise<void> {
   const base = await getBaseUrl();
   const headers = await authHeaders(roomId);
-  const res = await fetch(`${base}/api/dubtab/${roomId}/all`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/all`, {
     method: 'DELETE',
     headers,
   });
@@ -152,14 +152,14 @@ export async function clearAll(roomId: string): Promise<void> {
 export async function getRoomSettings(roomId: string): Promise<RoomSettings> {
   const base = await getBaseUrl();
   const headers = await authHeaders(roomId);
-  const res = await fetch(`${base}/api/dubtab/${roomId}/settings`, { headers });
+  const res = await fetch(`${base}/api/claytablet/${roomId}/settings`, { headers });
   if (!res.ok) throw new Error(`getRoomSettings: ${res.status}`);
   return res.json();
 }
 
 export async function verifyPassword(roomId: string, password: string): Promise<boolean> {
   const base = await getBaseUrl();
-  const res = await fetch(`${base}/api/dubtab/${roomId}/verify-password`, {
+  const res = await fetch(`${base}/api/claytablet/${roomId}/verify-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ password }),

@@ -1,29 +1,29 @@
 <div align="center">
 
-# 🪧 DubTab
+# 🪧 ClayTablet
 
 **A real-time clipboard, drop-box and notepad shared across all your devices.**
 
 Copy text on your laptop → it's already on your phone. Drop a file in the browser → grab it from the terminal. No accounts, no cloud sign-up, no vendor lock-in.
 
-[**🌐 dubtab.app**](https://dubtab.app) · [Docs](https://github.com/Goodspoken/dubtab/wiki) · [Releases](https://github.com/Goodspoken/dubtab/releases)
+[**🌐 claytablet.online**](https://claytablet.online) · [Docs](https://github.com/claytablet/claytablet/wiki) · [Releases](https://github.com/claytablet/claytablet/releases)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Docker](https://img.shields.io/badge/docker-compose-blue?logo=docker)](https://github.com/Goodspoken/dubtab)
+[![Docker](https://img.shields.io/badge/docker-compose-blue?logo=docker)](https://github.com/claytablet/claytablet)
 [![Python 3.11](https://img.shields.io/badge/python-3.11-blue?logo=python)](https://www.python.org/)
 [![React 19](https://img.shields.io/badge/react-19-61dafb?logo=react)](https://react.dev/)
 [![Tauri 2](https://img.shields.io/badge/tauri-2-orange?logo=tauri)](https://tauri.app/)
 
 <!-- TODO: replace with real demo GIF (15-30s, copy text on PC → instantly appears on phone) -->
-<img src="docs/demo.gif" alt="DubTab demo" width="720" />
+<img src="docs/demo.gif" alt="ClayTablet demo" width="720" />
 
 </div>
 
 ---
 
-## ✨ Why DubTab?
+## ✨ Why ClayTablet?
 
-You know the moment — you copy a long token on your laptop, then have to type it character-by-character on your phone. Or you snap a screenshot on the phone and need it on the PC *right now*. DubTab is one URL that fixes that for every device you own.
+You know the moment — you copy a long token on your laptop, then have to type it character-by-character on your phone. Or you snap a screenshot on the phone and need it on the PC *right now*. ClayTablet is one URL that fixes that for every device you own.
 
 - 🚀 **Real-time** — WebSocket, sub-100ms sync
 - 🔐 **Self-hostable** — one `docker compose up` and you own your data
@@ -37,11 +37,11 @@ You know the moment — you copy a long token on your laptop, then have to type 
 
 ```bash
 # Self-host
-curl -fsSL https://raw.githubusercontent.com/Goodspoken/dubtab/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/claytablet/claytablet/main/install.sh | bash
 # Opens at http://<your-lan-ip>:8080 — scan the QR with your phone, done.
 ```
 
-Or just use the public instance: **[dubtab.app](https://dubtab.app)** → type any room name → paste from any device.
+Or just use the public instance: **[claytablet.online](https://claytablet.online)** → type any room name → paste from any device.
 
 ---
 
@@ -71,7 +71,7 @@ Or just use the public instance: **[dubtab.app](https://dubtab.app)** → type a
 - **Chat** — per-room with nicknames
 
 ### Sharing & access
-- **Rooms by URL** — `dubtab.app/my-room`, public boards in the lobby
+- **Rooms by URL** — `claytablet.online/my-room`, public boards in the lobby
 - **Password protection** — bcrypt, rate-limited brute-force defence
 - **Read-only mode** — owner writes, guests view
 - **Personal rooms** — tied to OAuth account (Google / Yandex), never auto-expire
@@ -80,10 +80,10 @@ Or just use the public instance: **[dubtab.app](https://dubtab.app)** → type a
 
 ### Apps
 - **Web** — React 19 + Tailwind v4, dark mode, RU/EN
-- **Desktop** ([releases](https://github.com/Goodspoken/dubtab/releases)) — Tauri 2 (Windows/Linux/macOS), global hotkeys `Ctrl+Shift+V` / `Ctrl+Shift+C`, system tray, auto-updater
-- **Mobile** — React Native + Expo (Android/iOS) — [separate repo](https://github.com/Goodspoken/dubtab-mobile)
-- **CLI** — `dubtab` Go binary: `ls`, `send`, `copy`, `watch`, `tui` (interactive terminal board)
-- **PWA Share Target** — `Add to Home Screen` on phone → DubTab appears in the system Share menu like Google Drive
+- **Desktop** ([releases](https://github.com/claytablet/claytablet/releases)) — Tauri 2 (Windows/Linux/macOS), global hotkeys `Ctrl+Shift+V` / `Ctrl+Shift+C`, system tray, auto-updater
+- **Mobile** — React Native + Expo (Android/iOS) — [separate repo](https://github.com/claytablet/claytablet-mobile)
+- **CLI** — `claytablet` Go binary: `ls`, `send`, `copy`, `watch`, `tui` (interactive terminal board)
+- **PWA Share Target** — `Add to Home Screen` on phone → ClayTablet appears in the system Share menu like Google Drive
 
 ### Hosting & ops
 - **Docker Compose** — one-line deploy with auto-HTTPS via Caddy + Let's Encrypt
@@ -96,29 +96,29 @@ Or just use the public instance: **[dubtab.app](https://dubtab.app)** → type a
 ## 🚀 Quick Start
 
 ### Option 1 — Public instance (zero setup)
-Open [dubtab.app](https://dubtab.app), pick a room name, paste from any device.
+Open [claytablet.online](https://claytablet.online), pick a room name, paste from any device.
 
 ### Option 2 — Self-host with one command
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Goodspoken/dubtab/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/claytablet/claytablet/main/install.sh | bash
 ```
-Generates a JWT secret, detects your LAN IP, prints a QR code. Edit `~/.dubtab/.env` to customise.
+Generates a JWT secret, detects your LAN IP, prints a QR code. Edit `~/.claytablet/.env` to customise.
 
 ### Option 3 — Docker Compose
 ```bash
-git clone https://github.com/Goodspoken/dubtab
-cd dubtab
+git clone https://github.com/claytablet/claytablet
+cd claytablet
 cp .env.example .env       # set JWT_SECRET, HOST_URL, ALLOWED_ORIGINS
 docker compose up -d --build
 ```
 
 ### Option 4 — Use the public instance from CLI
 ```bash
-curl -fsSL https://dubtab.app/dubtab-linux-amd64 -o dubtab && chmod +x dubtab
-./dubtab login                    # OAuth in browser
-./dubtab send "hello from terminal"
-cat error.log | ./dubtab send     # pipe a logfile
-./dubtab tui                      # interactive terminal board
+curl -fsSL https://claytablet.online/claytablet-linux-amd64 -o claytablet && chmod +x claytablet
+./claytablet login                    # OAuth in browser
+./claytablet send "hello from terminal"
+cat error.log | ./claytablet send     # pipe a logfile
+./claytablet tui                      # interactive terminal board
 ```
 
 ---
@@ -129,7 +129,7 @@ Drop a folder into `plugins/`, restart the server, done. No isolation — for se
 
 ```python
 # plugins/my-plugin/plugin.py
-from dubtab_sdk import hook, scheduled, http, api
+from claytablet_sdk import hook, scheduled, http, api
 
 @hook("on_text_added")
 async def on_text(room_id: str, content: str, item_id: str):
@@ -180,7 +180,7 @@ npm run dev                        # :5173 (proxies /api → :8000)
 npm run build && npm run lint
 
 # CLI
-cd cli && go build ./...           # builds dubtab
+cd cli && go build ./...           # builds claytablet
 
 # Desktop
 cd desktop && npm install && npm run tauri dev
@@ -193,7 +193,7 @@ cd desktop && npm install && npm run tauri dev
 | Variable | Required | Notes |
 |---|---|---|
 | `JWT_SECRET` | ✅ | Use a long random string in prod |
-| `HOST_URL` | ✅ | Public URL (e.g. `https://dubtab.app`) |
+| `HOST_URL` | ✅ | Public URL (e.g. `https://claytablet.online`) |
 | `ALLOWED_ORIGINS` | ✅ | CORS origins, comma-separated |
 | `GOOGLE_CLIENT_ID` / `SECRET` | — | Google OAuth |
 | `YANDEX_CLIENT_ID` / `SECRET` | — | Yandex OAuth |
@@ -227,4 +227,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 
 MIT — do whatever you want, just don't blame me if you break it. See [LICENSE](LICENSE).
 
-If DubTab saved you time, [give the repo a ⭐](https://github.com/Goodspoken/dubtab) — it really helps with discovery.
+If ClayTablet saved you time, [give the repo a ⭐](https://github.com/claytablet/claytablet) — it really helps with discovery.

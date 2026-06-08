@@ -20,14 +20,14 @@ type roomInfo struct {
 var roomsCmd = &cobra.Command{
 	Use:   "rooms",
 	Short: "Список твоих личных комнат (требует логина)",
-	Example: `  dubtab rooms
-  dubtab rooms --switch my-room   # переключиться на комнату`,
+	Example: `  claytablet rooms
+  claytablet rooms --switch my-room   # переключиться на комнату`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		server := viper.GetString("server")
 		token := viper.GetString("token")
 
 		if token == "" {
-			return fmt.Errorf("не авторизован. Сначала запусти: dubtab login")
+			return fmt.Errorf("не авторизован. Сначала запусти: claytablet login")
 		}
 
 		req, err := http.NewRequest("GET", server+"/api/auth/me/rooms", nil)
@@ -44,7 +44,7 @@ var roomsCmd = &cobra.Command{
 		defer resp.Body.Close()
 
 		if resp.StatusCode == 401 {
-			return fmt.Errorf("токен устарел. Запусти: dubtab login")
+			return fmt.Errorf("токен устарел. Запусти: claytablet login")
 		}
 		if resp.StatusCode != 200 {
 			b, _ := io.ReadAll(resp.Body)
@@ -86,7 +86,7 @@ var roomsCmd = &cobra.Command{
 			viper.WriteConfig()
 			fmt.Printf("\n✓ Текущая комната → %s\n", switchRoom)
 		} else if len(rooms) > 1 {
-			fmt.Printf("\nПереключиться: dubtab rooms --switch <room-id> или dubtab room <id>\n")
+			fmt.Printf("\nПереключиться: claytablet rooms --switch <room-id> или claytablet room <id>\n")
 		}
 
 		return nil
@@ -99,7 +99,7 @@ func init() {
 	roomsCmd.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		server := viper.GetString("server")
 		if server == "" {
-			viper.Set("server", "https://dubtab.app")
+			viper.Set("server", "https://claytablet.online")
 		}
 		return nil
 	}

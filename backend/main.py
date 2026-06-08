@@ -39,7 +39,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
-logger = logging.getLogger("dubtab")
+logger = logging.getLogger("claytablet")
 
 # --- Initialize Database (via Alembic migrations, fallback to create_all) ---
 def _init_database():
@@ -190,18 +190,18 @@ async def lifespan(app: FastAPI):
     await plugin_manager.fire("on_startup")
 
     task = asyncio.create_task(cleanup_stale_rooms())
-    logger.info("DubTab API started. SQLite DB attached. Cleanup task running every %ds.", CLEANUP_INTERVAL_SECONDS)
+    logger.info("ClayTablet API started. SQLite DB attached. Cleanup task running every %ds.", CLEANUP_INTERVAL_SECONDS)
     print_lan_qr()
     yield
     task.cancel()
     await plugin_manager.fire("on_shutdown")
     plugin_manager.stop_scheduler()
-    logger.info("DubTab API shutting down.")
+    logger.info("ClayTablet API shutting down.")
 
-app = FastAPI(title="DubTab API", lifespan=lifespan)
+app = FastAPI(title="ClayTablet API", lifespan=lifespan)
 
 # --- CORS: restrict origins (configurable via env) ---
-_cors_origins_raw = os.getenv("ALLOWED_ORIGINS", "https://dubtab.app,http://localhost:5173,http://localhost:3000")
+_cors_origins_raw = os.getenv("ALLOWED_ORIGINS", "https://claytablet.online,https://claytablet.online,http://localhost:5173,http://localhost:3000")
 ALLOWED_ORIGINS = [o.strip() for o in _cors_origins_raw.split(",") if o.strip()]
 
 app.add_middleware(
@@ -290,7 +290,7 @@ def _check_room_access(room: Optional["models.Room"], token: Optional[str], pass
 
 
 def _extract_bearer_token(request: Request) -> Optional[str]:
-    token = request.cookies.get("dubtab_token")
+    token = request.cookies.get("claytablet_token")
     auth_header = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
         token = auth_header.split(" ", 1)[1]
@@ -377,7 +377,7 @@ def _room_settings_dict(room, user_id: Optional[str]) -> dict:
         "is_owner": room.owner_id is not None and user_id == room.owner_id,
     }
 
-@app.get("/api/dubtab/{room_id}/settings")
+@app.get("/api/claytablet/{room_id}/settings")
 def get_settings(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     db: Session = Depends(database.get_db),
@@ -388,7 +388,7 @@ def get_settings(
         return {"ttl": "24h", "is_protected": False, "is_readonly": False, "is_owner": False}
     return _room_settings_dict(room, user_id)
 
-@app.post("/api/dubtab/{room_id}/settings")
+@app.post("/api/claytablet/{room_id}/settings")
 async def update_settings(
     settings: RoomSettings,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -413,7 +413,7 @@ async def update_settings(
     await broadcast_sync(room_id)
     return _room_settings_dict(room, user_id)
 
-@app.get("/api/dubtab/rooms/public")
+@app.get("/api/claytablet/rooms/public")
 def list_public_rooms(db: Session = Depends(database.get_db)):
     """List public, non-system rooms ordered by recent activity."""
     rooms = (
@@ -432,12 +432,12 @@ def list_public_rooms(db: Session = Depends(database.get_db)):
         for r in rooms
     ]
 
-@app.get("/api/dubtab/rooms/system")
+@app.get("/api/claytablet/rooms/system")
 def list_system_rooms():
     """Return the list of built-in system rooms with metadata."""
     return SYSTEM_ROOMS
 
-@app.post("/api/dubtab/{room_id}/order")
+@app.post("/api/claytablet/{room_id}/order")
 async def update_order(
     settings: OrderSettings,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX), 
@@ -451,7 +451,7 @@ async def update_order(
     return {"status": "ok"}
 
 
-@app.post("/api/dubtab/{room_id}/verify-password")
+@app.post("/api/claytablet/{room_id}/verify-password")
 def verify_password(
     payload: PasswordVerification,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -486,7 +486,7 @@ async def websocket_endpoint(
 ):
     # FIX #2: Create a short-lived DB session for auth only, don't keep it for the WS lifetime
     password = websocket.query_params.get("password")
-    token = websocket.cookies.get("dubtab_token")
+    token = websocket.cookies.get("claytablet_token")
     # CLI и другие клиенты передают токен через query param или Authorization header
     if not token:
         token = websocket.query_params.get("token")
@@ -559,7 +559,7 @@ def item_to_dict(item: models.Item):
         res["text"] = item.text
     return res
 
-@app.get("/api/dubtab/{room_id}")
+@app.get("/api/claytablet/{room_id}")
 def get_clipboard(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX), 
     db: Session = Depends(database.get_db),
@@ -590,7 +590,7 @@ def get_clipboard(
     }
 
 # ---- Create ----
-@app.post("/api/dubtab/{room_id}/text")
+@app.post("/api/claytablet/{room_id}/text")
 async def add_text(
     item: TextItem,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -704,7 +704,7 @@ async def _upload_media(
     return item_to_dict(new_item)
 
 
-@app.post("/api/dubtab/{room_id}/image")
+@app.post("/api/claytablet/{room_id}/image")
 async def add_image(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX), 
     file: UploadFile = File(...),
@@ -714,7 +714,7 @@ async def add_image(
     touch_room(db, room_id, owner_id=user_id)
     return await _upload_media(room_id, file, db, "image", ALLOWED_EXTENSIONS, ALLOWED_MIME_TYPES)
 
-@app.post("/api/dubtab/{room_id}/audio")
+@app.post("/api/claytablet/{room_id}/audio")
 async def add_audio(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     file: UploadFile = File(...),
@@ -724,7 +724,7 @@ async def add_audio(
     touch_room(db, room_id, owner_id=user_id)
     return await _upload_media(room_id, file, db, "audio", ALLOWED_AUDIO_EXTENSIONS, ALLOWED_AUDIO_MIME_TYPES)
 
-@app.post("/api/dubtab/{room_id}/file")
+@app.post("/api/claytablet/{room_id}/file")
 async def add_file(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     file: UploadFile = File(...),
@@ -735,7 +735,7 @@ async def add_file(
     touch_room(db, room_id, owner_id=user_id)
     return await _upload_media(room_id, file, db, "file", None, None, max_items=MAX_FILES_PER_ROOM)
 
-@app.post("/api/dubtab/{room_id}/chat")
+@app.post("/api/claytablet/{room_id}/chat")
 async def add_chat(
     item: ChatItem,
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
@@ -767,7 +767,7 @@ async def add_chat(
     return item_to_dict(new_item)
 
 # ---- Delete ----
-@app.delete("/api/dubtab/{room_id}/all")
+@app.delete("/api/claytablet/{room_id}/all")
 async def clear_all(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     db: Session = Depends(database.get_db),
@@ -789,7 +789,7 @@ async def clear_all(
     await broadcast_sync(room_id)
     return {"status": "ok"}
 
-@app.delete("/api/dubtab/{room_id}/{item_id}")
+@app.delete("/api/claytablet/{room_id}/{item_id}")
 async def delete_item(
     room_id: str = Path(..., pattern=ROOM_ID_REGEX),
     item_id: str = Path(...),

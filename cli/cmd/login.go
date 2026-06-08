@@ -21,7 +21,7 @@ var loginCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		server := viper.GetString("server")
 		if server == "" {
-			server = "https://dubtab.app"
+			server = "https://claytablet.online"
 		}
 
 		provider, _ := cmd.Flags().GetString("provider")
@@ -59,17 +59,17 @@ var loginCmd = &cobra.Command{
 			return fmt.Errorf("токен не введён")
 		}
 
-		keyring.Set("dubtab", "token", token)
+		keyring.Set("claytablet", "token", token)
 		viper.Set("token", "") // Убираем из открытого текста
 
 		if err := viper.WriteConfig(); err != nil {
 			// Если конфига ещё нет, создаём
 			home, _ := os.UserHomeDir()
-			viper.WriteConfigAs(home + "/.config/dubtab.toml")
+			viper.WriteConfigAs(home + "/.config/claytablet.toml")
 		}
 
 		fmt.Printf("\n✓ Токен безопасно сохранён (Keychain)\n")
-		fmt.Println("Теперь можешь смотреть свои комнаты: dubtab rooms")
+		fmt.Println("Теперь можешь смотреть свои комнаты: claytablet rooms")
 		return nil
 	},
 }

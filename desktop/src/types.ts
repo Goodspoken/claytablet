@@ -1,4 +1,4 @@
-// ---- Shared types for DubTab desktop app ----
+// ---- Shared types for ClayTablet desktop app ----
 
 export interface ClipboardItem {
   id: string;

@@ -5,7 +5,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 DATA_DIR = os.getenv("DATA_DIR", "/app/data")
 os.makedirs(DATA_DIR, exist_ok=True)
 
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(DATA_DIR, 'dubtab.db')}"
+SQLALCHEMY_DATABASE_URL = f"sqlite:///{os.path.join(DATA_DIR, 'claytablet.db')}"
 
 # connect_args={"check_same_thread": False} is required only for SQLite
 engine = create_engine(

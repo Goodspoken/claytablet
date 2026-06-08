@@ -10,7 +10,7 @@ export default function PrivacyPage() {
         
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">1. Data Collection</h2>
-          <p>DubTab is a real-time sharing tool. We store the text, images, and audio messages you upload to rooms for a limited period (based on the room TTL settings).</p>
+          <p>ClayTablet is a real-time sharing tool. We store the text, images, and audio messages you upload to rooms for a limited period (based on the room TTL settings).</p>
           
           <h2 className="text-xl font-semibold">2. Authentication</h2>
           <p>When you use Google or Yandex to sign in, we only store your email and public profile information (name, picture) to manage your rooms.</p>

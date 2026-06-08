@@ -105,7 +105,7 @@ export function PluginsPanel() {
           Добавь папку плагина в <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">plugins/</code> и перезапусти сервер
         </p>
         <a
-          href="https://github.com/Goodspoken/dubtab/blob/main/plugins/PLUGIN_API.md"
+          href="https://github.com/claytablet/claytablet/blob/main/plugins/PLUGIN_API.md"
           target="_blank"
           rel="noreferrer"
           className="inline-block mt-3 text-xs text-indigo-500 hover:underline"
