@@ -67,6 +67,30 @@ interface BoardState {
   closeAllModals: () => void;
 }
 
+const getDefaultUsername = (): string => {
+  const stored = localStorage.getItem('claytablet_username');
+  if (stored) return stored;
+
+  const ua = navigator.userAgent;
+  let device = 'Device';
+  if (/android/i.test(ua)) {
+    device = 'Android';
+  } else if (/iPad|iPhone|iPod/.test(ua)) {
+    device = 'iOS';
+  } else if (/macintosh|mac os x/i.test(ua)) {
+    device = 'Mac';
+  } else if (/windows/i.test(ua)) {
+    device = 'Windows';
+  } else if (/linux/i.test(ua)) {
+    device = 'Linux';
+  }
+
+  const rand = Math.floor(1000 + Math.random() * 9000);
+  const defaultName = `${device}-${rand}`;
+  localStorage.setItem('claytablet_username', defaultName);
+  return defaultName;
+};
+
 export const useBoardStore = create<BoardState>((set, get) => ({
   // Room data
   roomId: null,
@@ -79,7 +103,7 @@ export const useBoardStore = create<BoardState>((set, get) => ({
   copiedId: null,
   isDragging: false,
   newNote: '',
-  username: localStorage.getItem('claytablet_username') || '',
+  username: getDefaultUsername(),
 
   // Modals
   isSettingsOpen: false,

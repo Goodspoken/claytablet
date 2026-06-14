@@ -22,6 +22,11 @@ export function ChatSidebar({ chats, username, isOpen, isReadOnly = false, onClo
   const { t } = useLanguage();
 
   useEffect(() => {
+    setLocalUsername(username);
+    setIsUsernameSet(!!username);
+  }, [username]);
+
+  useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -61,6 +66,19 @@ export function ChatSidebar({ chats, username, isOpen, isReadOnly = false, onClo
           <X size={16} />
         </button>
       </div>
+
+      {isUsernameSet && (
+        <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500">
+          <span>{t('chatActiveAs')}: <strong className="text-slate-700 dark:text-slate-200">{username}</strong></span>
+          <button
+            type="button"
+            onClick={() => setIsUsernameSet(false)}
+            className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 font-semibold cursor-pointer"
+          >
+            {t('chatEditName')}
+          </button>
+        </div>
+      )}
 
       <div className="flex-1 overflow-auto p-4 custom-scrollbar bg-slate-50/30 dark:bg-slate-900/30">
         {!isUsernameSet ? (

@@ -76,6 +76,7 @@ export function Header({
   const { lang, setLang, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { user, isLoading, logout } = useAuth();
+  const isLocalServer = window.location.hostname !== 'claytablet.online' && window.location.hostname !== 'claytablet.ru';
 
   const closeAll = () => { setIsManageOpen(false); setIsLangOpen(false); setGoToInput(''); };
   const handleGoToRoom = (e: React.FormEvent) => {
@@ -182,7 +183,7 @@ export function Header({
         <div className="flex items-center justify-end gap-1 sm:gap-1.5 shrink-0">
 
           {/* Auth Button */}
-          {!isLoading && !user && (
+          {!isLocalServer && !isLoading && !user && (
             <button
               onClick={() => setIsAuthModalOpen(true)}
               className="p-2 text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors bg-indigo-50/50 dark:bg-indigo-900/20 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/40 border border-indigo-100 dark:border-indigo-800/50"

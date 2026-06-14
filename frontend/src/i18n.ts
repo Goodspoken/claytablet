@@ -61,6 +61,8 @@ export const translations = {
     chatEmpty: 'Здесь пока пусто.',
     chatBeFirst: 'Оставьте сообщение первым!',
     youLabel: 'Вы',
+    chatActiveAs: 'Вы в чате как',
+    chatEditName: 'Изм.',
     
     // Modals & Prompts
     settingsTitle: 'Настройки комнаты',
@@ -201,6 +203,8 @@ export const translations = {
     chatEmpty: 'Nothing here yet.',
     chatBeFirst: 'Be the first to leave a message!',
     youLabel: 'You',
+    chatActiveAs: 'Chatting as',
+    chatEditName: 'Change',
     
     // Modals & Prompts
     settingsTitle: 'Room Settings',

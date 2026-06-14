@@ -17,6 +17,7 @@ export default function HomePage() {
   const { lang, setLang } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const { user, isLoading } = useAuth();
+  const isLocalServer = window.location.hostname !== 'claytablet.online' && window.location.hostname !== 'claytablet.ru';
 
   const [roomInput, setRoomInput] = useState('');
   const [inputError, setInputError] = useState('');
@@ -119,7 +120,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/20 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30 transition-colors duration-500">
       {/* Top bar */}
       <nav className="flex items-center justify-between px-6 sm:px-10 py-4">
-        <div className="flex items-center gap-3">
+        <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
           <img
             src="/logo-tablet-192.png"
             alt="ClayTablet"
@@ -130,7 +131,7 @@ export default function HomePage() {
           <span className="text-2xl sm:text-3xl font-black tracking-tight bg-gradient-to-r from-[#2d1056] via-[#6b3aa0] to-[#3a1e5c] dark:from-[#b58bff] dark:via-[#d4b0ff] dark:to-[#b58bff] bg-clip-text text-transparent">
             ClayTablet
           </span>
-        </div>
+        </Link>
         <div className="flex items-center gap-2">
           <button onClick={toggleTheme} className="p-2 text-slate-400 hover:text-amber-500 dark:hover:text-amber-300 transition-colors rounded-xl hover:bg-white/50 dark:hover:bg-slate-800/50">
             {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
@@ -149,7 +150,11 @@ export default function HomePage() {
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-indigo-100/80 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 rounded-full text-sm font-medium mb-6 border border-indigo-200/50 dark:border-indigo-700/50">
             <Zap size={14} />
-            {lang === 'RU' ? 'Бесплатно и без регистрации' : 'Free, no sign-up required'}
+            {isLocalServer ? (
+              lang === 'RU' ? 'Локальный сервер' : 'Local server'
+            ) : (
+              lang === 'RU' ? 'Бесплатно и без регистрации' : 'Free, no sign-up required'
+            )}
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-4">
@@ -244,7 +249,7 @@ export default function HomePage() {
           </div>
 
           {/* Sign in button */}
-          {!isLoading && !user && (
+          {!isLocalServer && !isLoading && !user && (
             <button
               onClick={openAuthWithPendingRoom}
               className="mt-4 px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition-all hover:shadow-md inline-flex items-center gap-2"
@@ -355,15 +360,20 @@ export default function HomePage() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center pb-8 text-sm text-slate-400 dark:text-slate-600">
-        ClayTablet © {new Date().getFullYear()} ·{' '}
-        <Link to="/terms" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
-          {lang === 'RU' ? 'Условия' : 'Terms'}
-        </Link>
-        {' · '}
-        <Link to="/privacy" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
-          {lang === 'RU' ? 'Конфиденциальность' : 'Privacy'}
-        </Link>
+      <footer className="text-center pb-8 text-sm text-slate-400 dark:text-slate-600 flex flex-col items-center gap-1.5">
+        <div>
+          ClayTablet © {new Date().getFullYear()} ·{' '}
+          <Link to="/terms" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
+            {lang === 'RU' ? 'Условия' : 'Terms'}
+          </Link>
+          {' · '}
+          <Link to="/privacy" className="hover:text-slate-600 dark:hover:text-slate-400 transition-colors">
+            {lang === 'RU' ? 'Конфиденциальность' : 'Privacy'}
+          </Link>
+        </div>
+        <div className="text-xs opacity-75 font-medium">
+          {lang === 'RU' ? 'разработано Goodspoken' : 'designed by Goodspoken'}
+        </div>
       </footer>
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
