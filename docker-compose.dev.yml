@@ -38,7 +38,7 @@ services:
       - ./frontend/Caddyfile.dev:/etc/caddy/Caddyfile:ro
       - ./data:/srv/media:ro  # Caddy serves media files directly
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/", "||", "exit", "1"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/"]
       interval: 30s
       timeout: 5s
       retries: 3
