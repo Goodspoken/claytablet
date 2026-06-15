@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Clock, Plus, MessageSquare, Settings, Wifi, WifiOff, Lock, ChevronDown, Download, Globe, Sun, Moon, LogIn, LogOut, User, Mic, Square, Palette, SendHorizontal, ClipboardPaste, Paperclip } from 'lucide-react';
+import { Clock, Plus, MessageSquare, Settings, Wifi, WifiOff, Lock, ChevronDown, Download, Globe, Sun, Moon, LogIn, LogOut, User, Mic, Square, Palette, SendHorizontal, ClipboardPaste, Paperclip, Terminal } from 'lucide-react';
 import type { RoomSettings } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../hooks/useAuth';
+import { copyToClipboard } from '../helpers';
 import { AuthModal } from './AuthModal';
 
 interface HeaderProps {
@@ -83,6 +84,14 @@ export function Header({
     e.preventDefault();
     const id = goToInput.trim();
     if (id) { closeAll(); navigate(`/${id}`); }
+  };
+
+  const handleCopyCli = () => {
+    closeAll();
+    const serverUrl = window.location.origin;
+    const cmd = `claytablet config --server ${serverUrl} --room ${roomId}`;
+    copyToClipboard(cmd);
+    showToast(t('cliCmdCopied'), 'success');
   };
 
   const toggleRecording = async () => {
@@ -276,6 +285,10 @@ export function Header({
 
                   <button onClick={() => { closeAll(); onDownload('zip'); }} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-3 transition-colors">
                     <Download size={16} /> {t('downloadZip')}
+                  </button>
+
+                  <button onClick={handleCopyCli} className="w-full text-left px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-3 transition-colors">
+                    <Terminal size={16} /> {t('copyCliCmd')}
                   </button>
 
                   {/* Language switcher (mobile) */}

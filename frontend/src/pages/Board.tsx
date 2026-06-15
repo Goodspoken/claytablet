@@ -5,6 +5,7 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { useToast } from '../hooks/useToast';
 import { useLanguage } from '../contexts/LanguageContext';
 import { downloadAsTxt, downloadAsMd, downloadAsZip } from '../utils/exportUtils';
+import { copyToClipboard } from '../helpers';
 
 import { Header } from '../components/Header';
 import { CardGrid } from '../components/CardGrid';
@@ -179,15 +180,21 @@ export default function Board() {
             isReadOnly={isReadOnly}
             onCopy={(content, id) => store.handleCopy(content, showToast, t, id)}
             onShare={(item) => store.handleShare(item, showToast, t)}
-            onCopyImage={async (url) => {
+             onCopyImage={async (url) => {
+              const absoluteUrl = window.location.origin + url;
               try {
+                if (!navigator.clipboard || !navigator.clipboard.write) {
+                  throw new Error('Clipboard write API not available');
+                }
                 const res = await fetch(url);
                 const blob = await res.blob();
                 const mimeType = blob.type.startsWith('image/') ? blob.type : 'image/png';
                 await navigator.clipboard.write([new ClipboardItem({ [mimeType]: blob })]);
                 showToast(t('copied'), 'success');
-              } catch {
-                showToast(t('clipboardError'), 'error');
+              } catch (err) {
+                console.warn('Failed to copy image blob, copying URL instead:', err);
+                copyToClipboard(absoluteUrl);
+                showToast(t('linkCopied'), 'success');
               }
             }}
             onDelete={(id) => store.handleDelete(id, showToast, t)}

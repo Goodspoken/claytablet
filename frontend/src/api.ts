@@ -150,8 +150,8 @@ export async function getMyRooms() {
   return res.data;
 }
 
-export async function getPublicRooms() {
-  const res = await axios.get(`${getBaseUrl()}/api/claytablet/rooms/public`);
+export async function getPublicRooms(all = false) {
+  const res = await axios.get(`${getBaseUrl()}/api/claytablet/rooms/public`, { params: all ? { all: true } : {} });
   return res.data;
 }
 

@@ -6,7 +6,7 @@
 
 Copy text on your laptop → it's already on your phone. Drop a file in the browser → grab it from the terminal. No accounts, no cloud sign-up, no vendor lock-in.
 
-[**🌐 claytablet.online**](https://claytablet.online) · [Docs](https://github.com/claytablet/claytablet/wiki) · [Releases](https://github.com/claytablet/claytablet/releases)
+[**🌐 claytablet.online**](https://claytablet.online) · [Docs](https://github.com/claytablet/claytablet/wiki) · [Releases](https://github.com/claytablet/claytablet/releases) · [Русский Readme](README.ru.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/docker-compose-blue?logo=docker)](https://github.com/claytablet/claytablet)
@@ -206,20 +206,25 @@ Full sample: [.env.example](.env.example)
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributing & Open-Source Collaboration
 
-PRs welcome — especially:
-- Translations beyond RU/EN
-- Plugins (drop them in `plugins/` and open a PR)
-- Bug reports with reproducible steps
+We are actively looking for contributors, co-maintainers, and beta-testers! ClayTablet is a fully open-source project and we would be thrilled to collaborate with you.
 
-Before submitting:
+Specifically, we need help with testing, polishing, and building native packages for:
+- **macOS & Windows** (Tauri v2 client in [desktop/](file:///home/vscode/claytablet/desktop))
+- **Android & iOS** (React Native + Expo client in [mobile/](file:///home/vscode/claytablet/mobile))
+- **Linux, macOS, Windows CLI** (Go-based client in [cli/](file:///home/vscode/claytablet/cli))
+- **Localization** (adding new languages to the web, mobile, and desktop apps)
+
+If you'd like to help test the apps on your devices, report bugs, suggest features, or submit pull requests, please join in!
+
+Before submitting a PR:
 ```bash
 cd backend && pytest tests/ -v && ruff check .
 cd frontend && npm run lint && npm run build
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide. We appreciate any help and are always open to collaboration!
 
 ---
 

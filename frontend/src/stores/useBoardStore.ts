@@ -214,7 +214,8 @@ export const useBoardStore = create<BoardState>((set, get) => ({
           }
           return;
         }
-        showToast(t('clipboardError'), 'error');
+        const isHttp = window.location.protocol === 'http:' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+        showToast(t(isHttp ? 'clipboardHttpHint' : 'clipboardError'), 'error');
         return;
       }
 

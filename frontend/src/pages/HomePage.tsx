@@ -47,9 +47,9 @@ export default function HomePage() {
 
   // Load public + system rooms on mount
   useEffect(() => {
-    api.getPublicRooms().then(setPublicRooms).catch(() => {});
+    api.getPublicRooms(isLocalServer).then(setPublicRooms).catch(() => {});
     api.getSystemRooms().then(setSystemRooms).catch(() => {});
-  }, []);
+  }, [isLocalServer]);
 
   // After login: restore pending room
   useEffect(() => {
@@ -158,17 +158,27 @@ export default function HomePage() {
           </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-4">
-            {lang === 'RU' ? (
-              <>Мгновенный буфер обмена<br /><span className="text-indigo-600 dark:text-indigo-400">между устройствами</span></>
+            {isLocalServer ? (
+              lang === 'RU' ? 'Локальный совместный буфер' : 'Local Shared Clipboard'
             ) : (
-              <>Instant clipboard<br /><span className="text-indigo-600 dark:text-indigo-400">across devices</span></>
+              lang === 'RU' ? (
+                <>Мгновенный буфер обмена<br /><span className="text-indigo-600 dark:text-indigo-400">между устройствами</span></>
+              ) : (
+                <>Instant clipboard<br /><span className="text-indigo-600 dark:text-indigo-400">across devices</span></>
+              )
             )}
           </h1>
 
           <p className="text-lg sm:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-8">
-            {lang === 'RU'
-              ? 'Скопировал на компьютере — открыл на телефоне. Текст, фото, файлы, голосовые. Никаких проводов.'
-              : 'Copy on your PC — open on your phone. Text, photos, files, voice notes. No cables needed.'}
+            {isLocalServer ? (
+              lang === 'RU'
+                ? 'Комнаты в вашей локальной сети. Все устройства имеют доступ без регистрации.'
+                : 'Rooms in your home network. All devices have access without sign-up.'
+            ) : (
+              lang === 'RU'
+                ? 'Скопировал на компьютере — открыл на телефоне. Текст, фото, файлы, голосовые. Никаких проводов.'
+                : 'Copy on your PC — open on your phone. Text, photos, files, voice notes. No cables needed.'
+            )}
           </p>
 
           {/* Room creation card */}
@@ -252,13 +262,42 @@ export default function HomePage() {
           {!isLocalServer && !isLoading && !user && (
             <button
               onClick={openAuthWithPendingRoom}
-              className="mt-4 px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium rounded-xl border border-slate-200 dark:border-slate-700 hover:border-indigo-300 transition-all hover:shadow-md inline-flex items-center gap-2"
+              className="mt-4 px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-medium rounded-xl border border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 transition-all hover:shadow-md inline-flex items-center gap-2"
             >
               <LogIn size={16} />
               {lang === 'RU' ? 'Войти, чтобы сохранять комнаты' : 'Sign in to save rooms'}
             </button>
           )}
         </div>
+
+        {/* Local active rooms list (prominently displayed in local server mode right below creation card) */}
+        {isLocalServer && publicRooms.length > 0 && (
+          <div className="mb-10 text-left bg-white/50 dark:bg-slate-800/30 rounded-3xl border border-slate-200/60 dark:border-slate-700/60 shadow-lg p-6">
+            <h2 className="text-lg font-bold text-slate-850 dark:text-slate-200 mb-4 flex items-center gap-2">
+              <Globe size={18} className="text-indigo-500" />
+              {lang === 'RU' ? 'Активные комнаты в сети' : 'Active Rooms in Network'}
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {publicRooms.map(room => (
+                <button
+                  key={room.id}
+                  onClick={() => navigate(`/${room.id}`)}
+                  className="text-left p-4 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200/60 dark:border-slate-700/60 hover:border-indigo-300 dark:hover:border-indigo-500 hover:shadow-md transition-all group flex flex-col justify-between h-20"
+                >
+                  <div className="flex items-center justify-between gap-1.5 w-full">
+                    <span className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400 truncate group-hover:text-indigo-700 dark:group-hover:text-indigo-300 transition-colors">
+                      #{room.id}
+                    </span>
+                    {room.is_protected && <Lock size={12} className="text-amber-500 shrink-0" />}
+                  </div>
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500">
+                    {formatActivity(room.last_activity)}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* My Rooms */}
         {user && !roomsLoading && myRooms && myRooms.length > 0 && (
@@ -315,8 +354,8 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* Public rooms */}
-        {publicRooms.length > 0 && (
+        {/* Public rooms (only on non-local servers) */}
+        {!isLocalServer && publicRooms.length > 0 && (
           <div className="mb-10">
             <h2 className="text-base font-bold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
               <Globe size={16} className="text-green-500" />
@@ -342,21 +381,23 @@ export default function HomePage() {
           </div>
         )}
 
-        {/* How it works */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-          {steps.map((step, i) => (
-            <div key={i} className="relative bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 hover:shadow-lg transition-all hover:-translate-y-0.5 group">
-              <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <step.icon size={20} />
+        {/* How it works (only on non-local servers) */}
+        {!isLocalServer && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            {steps.map((step, i) => (
+              <div key={i} className="relative bg-white/70 dark:bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-200/60 dark:border-slate-700/60 hover:shadow-lg transition-all hover:-translate-y-0.5 group">
+                <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <step.icon size={20} />
+                </div>
+                <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-400 dark:text-slate-500">
+                  {i + 1}
+                </div>
+                <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-1">{step.title}</h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{step.desc}</p>
               </div>
-              <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-sm font-bold text-slate-400 dark:text-slate-500">
-                {i + 1}
-              </div>
-              <h3 className="text-base font-bold text-slate-800 dark:text-slate-200 mb-1">{step.title}</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{step.desc}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </main>
 
       {/* Footer */}

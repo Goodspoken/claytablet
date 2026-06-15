@@ -414,11 +414,13 @@ async def update_settings(
     return _room_settings_dict(room, user_id)
 
 @app.get("/api/claytablet/rooms/public")
-def list_public_rooms(db: Session = Depends(database.get_db)):
+def list_public_rooms(all: bool = False, db: Session = Depends(database.get_db)):
     """List public, non-system rooms ordered by recent activity."""
+    query = db.query(models.Room).filter(~models.Room.is_system)
+    if not all:
+        query = query.filter(models.Room.is_public)
     rooms = (
-        db.query(models.Room)
-        .filter(models.Room.is_public, ~models.Room.is_system)
+        query
         .order_by(models.Room.last_activity.desc())
         .limit(50)
         .all()
