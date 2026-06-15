@@ -18,13 +18,15 @@ export function ChatSidebar({ chats, username, isOpen, isReadOnly = false, onClo
   const [chatInput, setChatInput] = useState('');
   const [localUsername, setLocalUsername] = useState(username);
   const [isUsernameSet, setIsUsernameSet] = useState(!!username);
+  const [prevUsername, setPrevUsername] = useState(username);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { t } = useLanguage();
 
-  useEffect(() => {
+  if (username !== prevUsername) {
+    setPrevUsername(username);
     setLocalUsername(username);
     setIsUsernameSet(!!username);
-  }, [username]);
+  }
 
   useEffect(() => {
     if (messagesEndRef.current) {
