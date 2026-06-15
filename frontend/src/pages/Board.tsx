@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useBoardStore } from '../stores/useBoardStore';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -27,6 +27,19 @@ export default function Board() {
 
   // --- Store ---
   const store = useBoardStore();
+
+  // --- Filter and Sort ---
+  const [filter, setFilter] = useState<'all' | 'image' | 'other'>('all');
+
+  const filteredItems = useMemo(() => {
+    if (filter === 'image') {
+      return store.items.filter(item => item.type === 'image');
+    }
+    if (filter === 'other') {
+      return store.items.filter(item => item.type !== 'image');
+    }
+    return store.items;
+  }, [store.items, filter]);
 
   // --- Sync roomId into store ---
   useEffect(() => {
@@ -174,8 +187,48 @@ export default function Board() {
       {/* Main Content Area */}
       <div className="flex-1 pt-[120px] flex overflow-hidden">
         <main className="flex-1 overflow-auto p-4 sm:p-6 custom-scrollbar relative z-10 w-full h-full cursor-default">
+          {/* Filter Bar */}
+          <div className="flex items-center justify-between mb-6 max-w-[1920px] mx-auto px-1">
+            <div className="flex bg-white/80 dark:bg-slate-800/80 backdrop-blur-md p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/50 shadow-sm">
+              <button
+                onClick={() => setFilter('all')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
+                  filter === 'all'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                {t('filterAll')}
+              </button>
+              <button
+                onClick={() => setFilter('image')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
+                  filter === 'image'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                {t('filterImages')}
+              </button>
+              <button
+                onClick={() => setFilter('other')}
+                className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 cursor-pointer ${
+                  filter === 'other'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                {t('filterOther')}
+              </button>
+            </div>
+            
+            <div className="text-xs font-medium text-slate-400 dark:text-slate-500 bg-white/40 dark:bg-slate-800/40 px-3 py-1.5 rounded-lg border border-slate-200/30 dark:border-slate-700/30 select-none">
+              {filteredItems.length}
+            </div>
+          </div>
+
           <CardGrid
-            items={store.items}
+            items={filteredItems}
             copiedId={store.copiedId}
             isReadOnly={isReadOnly}
             onCopy={(content, id) => store.handleCopy(content, showToast, t, id)}
@@ -189,7 +242,13 @@ export default function Board() {
                 const res = await fetch(url);
                 const blob = await res.blob();
                 const mimeType = blob.type.startsWith('image/') ? blob.type : 'image/png';
-                await navigator.clipboard.write([new ClipboardItem({ [mimeType]: blob })]);
+                const textBlob = new Blob([absoluteUrl], { type: 'text/plain' });
+                await navigator.clipboard.write([
+                  new ClipboardItem({
+                    [mimeType]: blob,
+                    'text/plain': textBlob
+                  })
+                ]);
                 showToast(t('copied'), 'success');
               } catch (err) {
                 console.warn('Failed to copy image blob, copying URL instead:', err);

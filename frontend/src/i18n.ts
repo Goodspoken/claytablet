@@ -148,6 +148,9 @@ export const translations = {
     readOnlyToggleDesc: 'Гости смогут просматривать доску, но не смогут добавлять или удалять записи.',
     readOnlyError: 'Доска в режиме «только чтение»',
     loading: 'Загрузка...',
+    filterAll: 'Все',
+    filterImages: 'Картинки',
+    filterOther: 'Не картинки',
   },
   EN: {
     // Header
@@ -296,5 +299,8 @@ export const translations = {
     readOnlyToggleDesc: 'Guests can view the board but cannot add or delete items.',
     readOnlyError: 'Board is in read-only mode',
     loading: 'Loading...',
+    filterAll: 'All',
+    filterImages: 'Images',
+    filterOther: 'Not Images',
   }
 };
